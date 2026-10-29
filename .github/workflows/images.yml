@@ -1,0 +1,150 @@
+name: BankOps image security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bankops-images-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # Digest-pinned scanner, no third-party scanner action or host Docker socket.
+  TRIVY_IMAGE: aquasec/trivy:0.71.0@sha256:016eae51fdcf989332a5404af7e8f625cd5d95d7c0907a221d080a996f556500
+  DOCKER_BUILD_RECORD_UPLOAD: 'false'
+
+jobs:
+  images:
+    name: Image / ${{ matrix.image }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - image: banking
+            context: backend/banking-service
+            dockerfile: backend/banking-service/Dockerfile
+          - image: agent
+            context: agent
+            dockerfile: agent/Dockerfile
+          - image: frontend
+            context: frontend
+            dockerfile: frontend/Dockerfile
+          - image: airflow
+            context: airflow
+            dockerfile: airflow/Dockerfile
+          - image: airflow-test
+            context: airflow
+            dockerfile: airflow/Dockerfile.test
+          - image: database
+            context: .
+            dockerfile: local/Dockerfile.database
+          - image: jaeger
+            context: local
+            dockerfile: local/Dockerfile.jaeger
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@v3
+      - name: Build existing Dockerfile to a local archive only
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          tags: bankops-ci/${{ matrix.image }}:${{ github.sha }}
+          push: false
+          pull: true
+          provenance: false
+          outputs: type=docker,dest=${{ runner.temp }}/bankops-image.tar
+          cache-from: type=gha,scope=bankops-${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=bankops-${{ matrix.image }}
+      - name: Cache public Trivy vulnerability databases
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ runner.temp }}/trivy-cache/db
+            ${{ runner.temp }}/trivy-cache/java-db
+          key: trivy-0.71.0-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: trivy-0.71.0-${{ runner.os }}-
+      - name: Record build identity and digest-pinned bases
+        env:
+          IMAGE: ${{ matrix.image }}
+          DOCKERFILE: ${{ matrix.dockerfile }}
+          CONTEXT: ${{ matrix.context }}
+          SOURCE_SHA: ${{ github.sha }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/image-reports" "$RUNNER_TEMP/trivy-cache"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          info = {key: os.environ[key] for key in
+                  ('IMAGE', 'DOCKERFILE', 'CONTEXT', 'SOURCE_SHA', 'IMAGE_DIGEST', 'TRIVY_IMAGE')}
+          info['bases'] = [line for line in Path(info['DOCKERFILE']).read_text().splitlines()
+                           if line.startswith('FROM ')]
+          (Path(os.environ['RUNNER_TEMP']) / 'image-reports/build.json').write_text(json.dumps(info, indent=2))
+          PY
+      - name: Scan OS and application packages (including unfixed HIGH and CRITICAL)
+        id: scan
+        run: |
+          docker run --rm \
+            --mount "type=bind,source=$RUNNER_TEMP/bankops-image.tar,target=/image.tar,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/trivy-cache,target=/cache" \
+            --mount "type=bind,source=$RUNNER_TEMP/image-reports,target=/reports" \
+            "$TRIVY_IMAGE" image --input /image.tar --cache-dir /cache \
+            --timeout 15m --no-progress --scanners vuln --severity HIGH,CRITICAL \
+            --ignore-unfixed=false --ignorefile /dev/null --list-all-pkgs \
+            --format json --output /reports/scan.json --exit-code 0
+      - name: Save shared advisory databases even if the later security gate fails
+        if: always() && matrix.image == 'banking' && steps.scan.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ runner.temp }}/trivy-cache/db
+            ${{ runner.temp }}/trivy-cache/java-db
+          key: trivy-0.71.0-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Generate CycloneDX SBOM from the same package inventory
+        run: |
+          docker run --rm \
+            --mount "type=bind,source=$RUNNER_TEMP/image-reports,target=/reports" \
+            "$TRIVY_IMAGE" convert --format cyclonedx \
+            --output /reports/sbom.cdx.json /reports/scan.json
+      - name: Fail on HIGH or CRITICAL vulnerabilities
+        run: |
+          docker run --rm \
+            --mount "type=bind,source=$RUNNER_TEMP/image-reports,target=/reports" \
+            "$TRIVY_IMAGE" convert --severity HIGH,CRITICAL --ignorefile /dev/null \
+            --format table --output /reports/vulnerabilities.txt \
+            --exit-code 1 /reports/scan.json
+      - name: Summarize security findings
+        if: always() && steps.build.outcome == 'success'
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: python3 .github/scripts/image_summary.py "$RUNNER_TEMP/image-reports/scan.json"
+      - name: Upload security evidence even when the gate fails
+        if: always() && steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-security-${{ matrix.image }}-${{ github.run_attempt }}
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/image-reports/build.json
+            ${{ runner.temp }}/image-reports/scan.json
+            ${{ runner.temp }}/image-reports/vulnerabilities.txt
+            ${{ runner.temp }}/image-reports/sbom.cdx.json

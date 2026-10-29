@@ -1,0 +1,8 @@
+*
+!database/
+!database/*.py
+!database/*.sql
+!database/requirements.txt
+!local/
+!local/provision.py
+!local/Dockerfile.database

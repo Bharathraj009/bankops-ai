@@ -1,0 +1,14 @@
+# Optional host-run monitoring profile: business APIs remain local to this host.
+server:
+  address: 127.0.0.1
+
+management:
+  server:
+    port: 8081
+    address: 0.0.0.0
+
+bankops:
+  tracing:
+    otlp:
+      enabled: true
+      endpoint: ${BANKOPS_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}

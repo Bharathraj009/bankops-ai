@@ -1,0 +1,11 @@
+apiVersion: 1
+providers:
+  - name: BankOps AI
+    orgId: 1
+    folder: BankOps AI
+    type: file
+    disableDeletion: true
+    editable: false
+    updateIntervalSeconds: 10
+    options:
+      path: /etc/grafana/dashboards

@@ -1,0 +1,187 @@
+name: ${BANKOPS_LOCAL_PROJECT:?Run python local/init.py}
+
+x-acl: &acl
+  build:
+    context: ..
+    dockerfile: local/Dockerfile.database
+  network_mode: service:postgres
+  environment: &acl-env
+    BANKOPS_LOCAL_COMPOSE: isolated
+    BANKOPS_POSTGRES_ADMIN_PASSWORD: ${BANKOPS_POSTGRES_ADMIN_PASSWORD:?Generate local credentials}
+    BANKOPS_MIGRATION_DB_PASSWORD: ${BANKOPS_MIGRATION_DB_PASSWORD:?Generate local credentials}
+    BANKOPS_DB_PASSWORD: ${BANKOPS_DB_PASSWORD:?Generate local credentials}
+    BANKOPS_RECONCILIATION_PASSWORD: ${BANKOPS_RECONCILIATION_PASSWORD:?Generate local credentials}
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: bankops
+      POSTGRES_USER: bankops
+      POSTGRES_PASSWORD: ${BANKOPS_POSTGRES_ADMIN_PASSWORD:?Generate local credentials}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256 --auth-local=scram-sha-256
+    command: [postgres, -c, password_encryption=scram-sha-256, -c, log_statement=none, -c, log_min_error_statement=panic, -c, hba_file=/etc/postgresql/bankops-pg_hba.conf]
+    networks: [financial]
+    volumes:
+      - financial:/var/lib/postgresql/data
+      - ../database/pg_hba.conf:/etc/postgresql/bankops-pg_hba.conf:ro
+    healthcheck:
+      test: [CMD, pg_isready, -U, bankops, -d, bankops]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  prepare:
+    <<: *acl
+    command: [prepare]
+    depends_on:
+      postgres: {condition: service_healthy}
+  migrate:
+    build: ../backend/banking-service
+    network_mode: service:postgres
+    entrypoint: [java, '-Dloader.main=com.bankops.banking.security.DatabaseMigration', -cp, /app/banking.jar, org.springframework.boot.loader.launch.PropertiesLauncher]
+    environment:
+      BANKOPS_MIGRATION_APPLY: local-only
+      BANKOPS_MIGRATION_DB_URL: jdbc:postgresql://127.0.0.1:5432/bankops
+      BANKOPS_MIGRATION_DB_USER: bankops_migrator
+      BANKOPS_MIGRATION_DB_PASSWORD: ${BANKOPS_MIGRATION_DB_PASSWORD:?Generate local credentials}
+    depends_on:
+      prepare: {condition: service_completed_successfully}
+  grant:
+    <<: *acl
+    command: [grant]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+  banking:
+    build: ../backend/banking-service
+    networks: [financial, telemetry, web]
+    environment:
+      SPRING_PROFILES_ACTIVE: db-secure
+      BANKOPS_BIND_ADDRESS: 0.0.0.0
+      BANKOPS_ALLOWED_HOSTS: localhost,127.0.0.1,banking
+      BANKOPS_DB_URL: jdbc:postgresql://postgres:5432/bankops
+      BANKOPS_DB_USER: bankops_runtime
+      BANKOPS_DB_PASSWORD: ${BANKOPS_DB_PASSWORD:?Generate local credentials}
+      BANKOPS_BANKING_API_TOKEN: ${BANKOPS_BANKING_API_TOKEN:?Generate local credentials}
+      BANKOPS_CUSTOMER_ENABLED: 'false'
+      BANKOPS_FLYWAY_ENABLED: 'false'
+      BANKOPS_TRACING_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      BANKOPS_TRACING_OTLP_ENABLED: 'true'
+    depends_on:
+      grant: {condition: service_completed_successfully}
+      jaeger: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, curl, -fsS, http://127.0.0.1:8080/actuator/health]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+  agent:
+    build: ../agent
+    networks: [web, telemetry]
+    environment:
+      BANKOPS_AGENT_HOST: 0.0.0.0
+      BANKOPS_AGENT_ALLOWED_HOSTS: '["localhost","127.0.0.1","agent"]'
+      BANKOPS_AGENT_API_TOKEN_SHA256: ${BANKOPS_AGENT_API_TOKEN_SHA256:?Generate local credentials}
+      BANKOPS_AGENT_PROMETHEUS_URL: http://prometheus:9090
+      BANKOPS_AGENT_JAEGER_URL: http://jaeger:16686
+      BANKOPS_AGENT_LLM_PROVIDER: disabled
+      BANKOPS_AGENT_REMEDIATION_ENABLED: 'false'
+      BANKOPS_AGENT_AIRFLOW_ENABLED: 'false'
+      BANKOPS_AGENT_APPROVAL_DB_PATH: /home/agent/state/approvals.sqlite3
+      BANKOPS_AGENT_APPROVAL_PROPOSER_TOKEN_SHA256: ${BANKOPS_PROPOSER_SHA256:?Generate local credentials}
+      BANKOPS_AGENT_APPROVAL_REVIEWER_TOKEN_SHA256: ${BANKOPS_REVIEWER_SHA256:?Generate local credentials}
+    volumes: [approvals:/home/agent/state]
+    depends_on:
+      prometheus: {condition: service_healthy}
+  frontend:
+    build: ../frontend
+    networks: [web]
+    environment:
+      BANKOPS_BANKING_API_TARGET: http://banking:8080
+      BANKOPS_MONITORING_API_TARGET: http://agent:8000
+      BANKOPS_AGENT_API_TOKEN: ${BANKOPS_AGENT_API_TOKEN:?Generate local credentials}
+    ports: ['127.0.0.1:15173:5173']
+    depends_on:
+      banking: {condition: service_healthy}
+      agent: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:5173').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  airflow-metadata:
+    extends:
+      file: ../airflow/compose.yaml
+      service: airflow-metadata
+    networks: [metadata]
+    volumes:
+      - metadata:/var/lib/postgresql/data
+      - ../airflow/runtime/metadata-init.sh:/docker-entrypoint-initdb.d/10-metadata-role.sh:ro
+  airflow:
+    extends:
+      file: ../airflow/compose.yaml
+      service: airflow
+    build:
+      context: ../airflow
+      dockerfile: Dockerfile
+    networks: !override [metadata, financial, interfaces]
+    ports: !override ['127.0.0.1:18087:8080']
+    environment:
+      BANKOPS_RECONCILIATION_HOST: postgres
+    depends_on:
+      grant: {condition: service_completed_successfully}
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    networks: [telemetry, interfaces]
+    ports: ['127.0.0.1:19097:9090']
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./.secrets/banking-token:/run/secrets/banking-token:ro
+      - prometheus:/prometheus
+    depends_on:
+      banking: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, --spider, -q, http://127.0.0.1:9090/-/ready]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  grafana:
+    image: grafana/grafana:13.2.4
+    networks: [telemetry, interfaces]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${BANKOPS_GRAFANA_ADMIN_PASSWORD:?Generate local credentials}
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    ports: ['127.0.0.1:13007:3000']
+    volumes:
+      - grafana:/var/lib/grafana
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      prometheus: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, --spider, -q, http://127.0.0.1:3000/api/health]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+  jaeger:
+    build:
+      context: .
+      dockerfile: Dockerfile.jaeger
+    networks: [telemetry, interfaces]
+    ports: ['127.0.0.1:16687:16686']
+
+networks:
+  financial: {internal: true}
+  metadata: {internal: true}
+  telemetry: {internal: true}
+  web: {}
+  interfaces: {}
+volumes:
+  financial: {}
+  metadata: {}
+  logs: {}
+  auth: {}
+  approvals: {}
+  prometheus: {}
+  grafana: {}

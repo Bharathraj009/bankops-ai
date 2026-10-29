@@ -1,0 +1,70 @@
+name: bankops-airflow
+services:
+  airflow-metadata:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow_admin
+      POSTGRES_PASSWORD: ${BANKOPS_AIRFLOW_METADATA_ADMIN_PASSWORD:?Set separate local metadata administrator password}
+      BANKOPS_AIRFLOW_METADATA_PASSWORD: ${BANKOPS_AIRFLOW_METADATA_PASSWORD:?Set non-superuser metadata runtime password}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+    command: [postgres, -c, password_encryption=scram-sha-256, -c, log_statement=none, -c, log_min_error_statement=panic]
+    volumes:
+      - metadata:/var/lib/postgresql/data
+      - ./runtime/metadata-init.sh:/docker-entrypoint-initdb.d/10-metadata-role.sh:ro
+    mem_limit: 384m
+    cpus: 0.5
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U airflow -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      BANKOPS_AIRFLOW_METADATA_PASSWORD: ${BANKOPS_AIRFLOW_METADATA_PASSWORD:?Set local metadata password}
+      BANKOPS_AIRFLOW_UI_PASSWORD: ${BANKOPS_AIRFLOW_UI_PASSWORD:?Set local UI password}
+      BANKOPS_AIRFLOW_VIEWER_PASSWORD: ${BANKOPS_AIRFLOW_VIEWER_PASSWORD:?Set viewer-only password}
+      BANKOPS_RECONCILIATION_PASSWORD: ${BANKOPS_RECONCILIATION_PASSWORD:?Set read-only password}
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__PARALLELISM: "1"
+      AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "1"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: localadmin:admin,agentviewer:viewer
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /opt/airflow/local-auth/passwords.json
+      AIRFLOW__API_AUTH__JWT_SECRET: ${BANKOPS_AIRFLOW_JWT_SECRET:?Set JWT secret}
+      AIRFLOW__API__WORKERS: "1"
+      AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://localhost:8080/execution/
+      AIRFLOW__DAG_PROCESSOR__PARSING_PROCESSES: "1"
+      AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+      AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+    ports:
+      - "127.0.0.1:18081:8080"
+    volumes:
+      - logs:/opt/airflow/logs
+      - auth:/opt/airflow/local-auth
+    networks:
+      default:
+      banking:
+    depends_on:
+      airflow-metadata:
+        condition: service_healthy
+    mem_limit: 2304m
+    cpus: 2.0
+    healthcheck:
+      test: [CMD, python, -c, "import json,urllib.request; h=json.load(urllib.request.urlopen('http://localhost:8080/api/v2/monitor/health',timeout=5)); assert all(h[k]['status']=='healthy' for k in ('metadatabase','scheduler','dag_processor'))"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+networks:
+  banking:
+    external: true
+    name: bankops-ai_default
+volumes:
+  metadata:
+  logs:
+  auth:

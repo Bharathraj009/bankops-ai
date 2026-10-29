@@ -1,0 +1,55 @@
+server:
+  address: ${BANKOPS_BIND_ADDRESS:127.0.0.1}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+spring:
+  main:
+    banner-mode: "off"
+  application:
+    name: banking-service
+  datasource:
+    url: ${BANKOPS_DB_URL:jdbc:postgresql://localhost:5433/bankops}
+    username: ${BANKOPS_DB_USER}
+    password: ${BANKOPS_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: ${BANKOPS_FLYWAY_ENABLED:false}
+    locations: classpath:db/migration
+
+bankops:
+  database:
+    verify-runtime: true
+  customer:
+    enabled: ${BANKOPS_CUSTOMER_ENABLED:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+logging:
+  structured:
+    format:
+      console: ecs
+  level:
+    # Framework diagnostics can contain SQL parameters, request paths or exception details.
+    root: "OFF"
+    org.springframework: "OFF"
+    org.hibernate: "OFF"
+    org.apache: "OFF"
+    com.zaxxer.hikari: "OFF"
+    org.flywaydb: "OFF"
+    com.bankops.banking.observability: INFO

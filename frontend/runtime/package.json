@@ -1,0 +1,12 @@
+{
+  "name": "bankops-preview-runtime",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "bankops-workspace": "file:..",
+    "vite": "8.3.4"
+  },
+  "overrides": {
+    "picomatch": "4.0.4"
+  }
+}

@@ -1,0 +1,14 @@
+*
+!package.json
+!package-lock.json
+!index.html
+!tsconfig.json
+!vite.config.ts
+!proxy.ts
+!preview.config.ts
+!runtime/
+!runtime/package.json
+!runtime/package-lock.json
+!serve.mjs
+!src/
+!src/**

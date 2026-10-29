@@ -1,0 +1,290 @@
+{
+  "uid": "bankops-ai",
+  "title": "BankOps AI",
+  "description": "API and transfer HTTP outcomes. No customer or financial identifiers.",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "15s",
+  "timezone": "browser",
+  "tags": [
+    "bankops",
+    "prometheus"
+  ],
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "API request rate",
+      "description": "Completed API responses per second.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bankops-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"banking-service\",uri=~\"/api/v1/.*\"}[5m]))",
+          "legendFormat": "API request rate",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "bankops-prometheus"
+          },
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "API error rate",
+      "description": "Fraction of API responses with HTTP 4xx or 5xx. Zero for zero observed volume; absent without HTTP series.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bankops-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(rate(http_server_requests_seconds_count{job=\"banking-service\",uri=~\"/api/v1/.*\",status=~\"4..|5..\"}[5m])) or (0 * sum(rate(http_server_requests_seconds_count{job=\"banking-service\",uri=~\"/api/v1/.*\"}[5m])))) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"banking-service\",uri=~\"/api/v1/.*\"}[5m])), 1e-12)",
+          "legendFormat": "API error rate",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "bankops-prometheus"
+          },
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "API latency p95",
+      "description": "95th percentile response latency; absent without observations in the window.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bankops-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"banking-service\",uri=~\"/api/v1/.*\"}[5m])))",
+          "legendFormat": "API latency p95",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "bankops-prometheus"
+          },
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Successful transfer rate",
+      "description": "New completed transfers per second. Excludes matching retries and development funding. Zero fallback derives from observed transfer counters.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bankops-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(bankops_transfer_outcomes_total{job=\"banking-service\",operation=\"transfer\",outcome=\"completed\"}[5m])) or (0 * sum(rate(bankops_transfer_outcomes_total{job=\"banking-service\",operation=\"transfer\"}[5m])))",
+          "legendFormat": "Successful transfer rate",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "bankops-prometheus"
+          },
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Failed transfer request rate",
+      "description": "Unsuccessful transfer HTTP responses per second, not persisted FAILED rows. Excludes matching retries and development funding.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bankops-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(bankops_transfer_outcomes_total{job=\"banking-service\",operation=\"transfer\",outcome=~\"invalid_request|account_not_found|idempotency_conflict|rejected|server_error|other\"}[5m])) or (0 * sum(rate(bankops_transfer_outcomes_total{job=\"banking-service\",operation=\"transfer\"}[5m])))",
+          "legendFormat": "Failed transfer request rate",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "bankops-prometheus"
+          },
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Application availability",
+      "description": "Scrape availability: 1 = UP, 0 = DOWN. Missing target remains No data.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bankops-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "min(up{job=\"banking-service\"})",
+          "legendFormat": "Application availability",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "bankops-prometheus"
+          },
+          "range": true
+        }
+      ]
+    }
+  ]
+}

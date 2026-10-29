@@ -1,0 +1,17 @@
+name: ${BANKOPS_LOCAL_PROJECT:?Generate local credentials}-regression
+services:
+  regression-db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: bankops_test
+      POSTGRES_DB: bankops_test
+      POSTGRES_PASSWORD: ${BANKOPS_POSTGRES_ADMIN_PASSWORD:?Generate local credentials}
+    ports: ['127.0.0.1:15567:5432']
+    volumes: [regression:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD, pg_isready, -U, bankops_test, -d, bankops_test]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+volumes:
+  regression: {}

@@ -1,0 +1,9 @@
+# Use the normal runtime process without any migration password in its environment.
+spring:
+  datasource:
+    username: ${BANKOPS_DB_USER:bankops_runtime}
+  flyway:
+    enabled: false
+bankops:
+  database:
+    verify-runtime: true

@@ -1,0 +1,6 @@
+bankops:
+  dev:
+    funding-account-id: ${BANKOPS_DEV_FUNDING_ACCOUNT_ID:}
+    reserve-bootstrap:
+      enabled: ${BANKOPS_DEV_RESERVE_BOOTSTRAP_ENABLED:false}
+      initial-balance: ${BANKOPS_DEV_RESERVE_INITIAL_BALANCE:1000000.00}

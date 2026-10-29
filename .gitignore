@@ -1,0 +1,47 @@
+.env
+.env.*
+!.env*.example
+
+# Local database backups
+backups/*.dump
+# Generated development banking response bodies and reports. Already tracked
+# copies/history require a separate publication review; ignore rules do not erase them.
+backups/workflow-*.json
+backups/workflow-*-report.md
+
+# Unified local stack credentials and verification artifacts
+local/.secrets/
+local/results/
+local/**/__pycache__/
+local/*.local.json
+
+# Generated Python caches and developer tooling state
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+.coverage
+.coverage.*
+htmlcov/
+
+# Runtime logs, local databases, and disposable test output
+*.log
+*.sqlite3
+*.sqlite3-*
+*.dump
+playwright-report/
+test-results/
+
+# Private credential files (keep documented environment examples above)
+.secrets/
+*.key
+*.p12
+*.pfx
+
+# Local publication audit evidence; never publish.
+.publication/
+.vscode/
+*.tar
+*.oci
