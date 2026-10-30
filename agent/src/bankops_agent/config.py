@@ -53,7 +53,16 @@ class Settings(BaseSettings):
     log_window_seconds: int = Field(default=300, ge=1, le=3600)
     log_max_events: int = Field(default=100, ge=1, le=500)
     log_max_bytes: int = Field(default=1048576, ge=1024, le=4194304)
-    llm_provider: Literal["disabled", "json_http", "openai_compatible"] = "disabled"
+    rag_enabled: bool = False
+    log_include_info: bool = False
+    rag_corpus_directory: str | None = Field(default=None, repr=False)
+    rag_top_k: int = Field(default=4, ge=1, le=6)
+    rag_chunk_words: int = Field(default=80, ge=20, le=160)
+    rag_chunk_overlap: int = Field(default=12, ge=0, le=40)
+    evidence_mode: Literal["operational", "synthetic_demo"] = "operational"
+    synthetic_scenario: Literal["http_errors", "latency", "service_down"] = "http_errors"
+    llm_external_opt_in: bool = False
+    llm_provider: Literal["disabled", "json_http", "openai_compatible", "openai_cloud"] = "disabled"
     llm_url: HttpUrl | None = Field(default=None, repr=False)
     llm_api_key: SecretStr | None = Field(default=None, repr=False)
     llm_model: str = Field(default="rca", pattern=r"^[A-Za-z0-9_.:/-]{1,100}$")
@@ -67,6 +76,7 @@ class Settings(BaseSettings):
     approval_reviewer_token_sha256: SecretStr | None = Field(default=None, repr=False)
     remediation_enabled: bool = False
     airflow_enabled: bool = False
+    airflow_ca_file: str | None = Field(default=None, repr=False, max_length=2048)
     airflow_url: HttpUrl = Field(default="http://localhost:18081", repr=False)
     airflow_api_token: SecretStr | None = Field(default=None, repr=False)
     airflow_timeout_seconds: float = Field(default=5, gt=0, le=30, allow_inf_nan=False)
@@ -106,9 +116,20 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def configured_llm(self):
+        if self.rag_chunk_overlap >= self.rag_chunk_words:
+            raise ValueError("Chunk overlap must be smaller than chunk size")
+        if self.evidence_mode == "synthetic_demo" and (self.remediation_enabled or self.airflow_enabled):
+            raise ValueError("Synthetic demonstration cannot enable remediation or Airflow access")
+        if self.llm_provider == "openai_cloud":
+            endpoint = "https://api.openai.com/v1/chat/completions"
+            if self.llm_url is not None and str(self.llm_url) != endpoint:
+                raise ValueError("Cloud provider requires its fixed supported endpoint")
+            self.llm_url = HttpUrl(endpoint)
+            if self.llm_model == "rca":
+                raise ValueError("Select an explicit cloud model")
         if self.llm_provider != "disabled" and self.llm_url is None:
             raise ValueError("LLM URL is required for the configured provider")
-        if self.llm_provider == "openai_compatible":
+        if self.llm_provider in ("openai_compatible", "openai_cloud"):
             key = self.llm_api_key.get_secret_value() if self.llm_api_key else ""
             if not key or any(ord(char) <= 32 or ord(char) >= 127 for char in key):
                 raise ValueError("A valid environment-injected bearer key is required")

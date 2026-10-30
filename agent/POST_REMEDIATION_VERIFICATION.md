@@ -84,7 +84,7 @@ Final automated results:
 - Concurrent verification: four independent store connections produced one
   success and three duplicate rejections. Injected audit-write failure rolled
   back the entire verification. Database update/delete attempts were rejected.
-- V1–V5 SHA-256 checksums match the pre-existing values. Banking code and
+- V1â€“V5 SHA-256 checksums match the pre-existing values. Banking code and
   monitoring configuration were not changed. No development banking data was
   accessed or modified by this step; banking tests used only isolated PostgreSQL.
 

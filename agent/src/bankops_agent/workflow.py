@@ -38,7 +38,8 @@ def build_workflow(sources):
         return {"traces": traces, "logs": logs}
 
     def report_assembly(state: InvestigationState):
-        return {"report": assemble_report(state["started_at"], state["decision"], state["traces"], state["logs"])}
+        return {"report": assemble_report(state["started_at"], state["decision"], state["traces"], state["logs"],
+                                         evidence_mode=sources.settings.evidence_mode)}
 
     async def rca(state: InvestigationState):
         analyzer = getattr(sources, "rca_analyzer", None) or RCAAnalyzer(sources.settings)

@@ -1,0 +1,8 @@
+{
+  "id": "transfer-failures",
+  "title": "Synthetic historical incident: rejected transfers",
+  "category": "historical_incident",
+  "data_classification": "synthetic",
+  "supports": ["transfer_failure_degradation"],
+  "content": "A fictional workload produced an elevated transfer failure rate. Rejected requests included insufficient funds and conflicting idempotency keys. Those rejections preserved ledger integrity and were not evidence of corruption. Separate expected validation rejections from service errors before interpreting the aggregate transfer failure metric. Use current rule observations, safe timings, and read-only reconciliation results. Compare metric windows and collect additional evidence. Historical rejected transfers do not justify moving money, bypassing authorization, changing ledger entries, or retrying with a new idempotency key. Human approval never grants the model a financial write capability."
+}

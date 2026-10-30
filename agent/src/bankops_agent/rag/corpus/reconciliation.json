@@ -1,0 +1,8 @@
+{
+  "id": "reconciliation",
+  "title": "Synthetic reconciliation evidence and failure runbook",
+  "category": "troubleshooting",
+  "data_classification": "synthetic",
+  "supports": ["reconciliation_evidence_gap", "reconciliation_integrity_failure", "reconciliation_workflow_failure"],
+  "content": "Synthetic reconciliation troubleshooting. The read-only workflow validates connectivity, executes a consistent snapshot, validates results and records a bounded summary. INSUFFICIENT_DATA means the source was unavailable or its schema incompatible; it does not establish a financial violation. Check read-only connectivity, supported schema versions and evidence freshness. FAIL with validated aggregate checks indicates reconciliation integrity violations, not their cause. Inspect completed double entry, account balances, ledger consistency and lifecycle checks using authorized read-only evidence. A failed task without a valid summary is a workflow failure; do not infer financial corruption. Preserve human review and never modify banking records automatically. Historical similarity is not proof of causality."
+}

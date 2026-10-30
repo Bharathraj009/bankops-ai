@@ -1,0 +1,8 @@
+{
+  "id": "service-outage",
+  "title": "Synthetic historical incident: service unavailable",
+  "category": "historical_incident",
+  "data_classification": "synthetic",
+  "supports": ["service_unavailability"],
+  "content": "A fictional isolated service outage caused the banking availability metric to report down. The process health and scrape target were checked independently. Missing evidence was not interpreted as healthy. An unavailable service can be consistent with a process interruption, a scrape configuration issue, or a network boundary. The availability observation supports service unavailability but does not establish a confirmed root cause. Check dependency health and compare successive metric windows. Human review is required for any proposed operational action. This synthetic record never authorizes a restart or a banking transaction."
+}

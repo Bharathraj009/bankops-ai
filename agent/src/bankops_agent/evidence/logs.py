@@ -17,7 +17,7 @@ from bankops_agent.config import Settings
 class LogEvent(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     timestamp: datetime
-    level: Literal["WARN", "ERROR"]
+    level: Literal["INFO", "WARN", "ERROR"]
     event_type: Literal["http_request_completed", "transfer_outcome"]
     correlation_id: str | None = None
     trace_id: str | None = None
@@ -106,7 +106,8 @@ class LogCollector:
                 log = item.get("log")
                 if not isinstance(log, dict) or log.get("logger") != "com.bankops.banking.observability.SafeEventLogger":
                     continue
-                if log.get("level") not in ("WARN", "ERROR") or item.get("event_type") not in ("http_request_completed", "transfer_outcome"):
+                levels = ("INFO", "WARN", "ERROR") if self.settings.log_include_info else ("WARN", "ERROR")
+                if log.get("level") not in levels or item.get("event_type") not in ("http_request_completed", "transfer_outcome"):
                     continue
                 timestamp = datetime.fromisoformat(item["@timestamp"].replace("Z", "+00:00"))
                 if timestamp.tzinfo is None:

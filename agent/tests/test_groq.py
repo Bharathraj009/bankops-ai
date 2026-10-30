@@ -140,12 +140,22 @@ def test_cli_never_echoes_bad_arguments_or_exceptions(monkeypatch, capsys):
 
 def test_transport_explicitly_disables_retries_and_environment_proxy(monkeypatch):
     from bankops_agent.rca.provider import post_json
+    from bankops_agent.rag.retrieval import load_index
+    from bankops_agent.rag.synthetic import permitted_observations
     captured = []
     def factory(**kwargs):
         captured.append(kwargs)
         return httpx.MockTransport(lambda request: httpx.Response(200, content=b"{}"))
     monkeypatch.setattr(httpx, "AsyncHTTPTransport", factory)
     config = Settings(llm_provider="openai_compatible", llm_url=verify_groq.ENDPOINT,
-                      llm_model=verify_groq.MODEL, llm_api_key="PRIVATE", llm_chat_include_store=False)
-    assert asyncio.run(post_json(config, {})) == b"{}"
+                      llm_model=verify_groq.MODEL, llm_api_key="PRIVATE", llm_chat_include_store=False,
+                      rag_enabled=True, evidence_mode="synthetic_demo", llm_external_opt_in=True)
+    # Exercise transport construction with an authorized synthetic payload;
+    # an empty payload must fail the export guard before transport construction.
+    evidence = {"incident_state": "incident", "evidence_status": "complete",
+                "classification": "synthetic", "scenario": config.synthetic_scenario,
+                "observations": permitted_observations(config.synthetic_scenario),
+                "retrieved_sources": [row.model_dump(mode="json", exclude={"score"})
+                    for row in load_index().retrieve({"http_error_degradation"}).sources]}
+    assert asyncio.run(post_json(config, {"evidence": evidence})) == b"{}"
     assert captured == [{"retries": 0, "trust_env": False}]

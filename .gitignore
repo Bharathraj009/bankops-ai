@@ -45,3 +45,20 @@ test-results/
 .vscode/
 *.tar
 *.oci
+
+# Generated local tooling and runtime evidence (publication policy)
+node_modules/
+.cache/
+target/
+dist/
+build/
+*.egg-info/
+*.tsbuildinfo
+*.pem
+*.db
+*.sqlite
+*.har
+*.pcap
+**/audit*.json
+**/scan*.json
+**/sbom*.json

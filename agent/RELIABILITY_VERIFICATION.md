@@ -94,7 +94,7 @@ in the report. Final suite results and before/after checks follow below.
 - Complete banking suite: **202 passed**, zero failures/errors/skips; BUILD SUCCESS,
   1 minute 47 seconds, disposable PostgreSQL 17. Container and test volume removed.
 - Dependency validation: no broken requirements.
-- V1–V5 SHA-256 checksums unchanged from the prior baseline.
+- V1â€“V5 SHA-256 checksums unchanged from the prior baseline.
 - All isolated service processes were stopped by fixture cleanup.
 - No runtime behavior changes were necessary; this step adds one end-to-end
   regression test and documentation. Production-disabled defaults are preserved.

@@ -3,6 +3,8 @@ import asyncio
 from datetime import UTC, datetime, timedelta
 import json
 import re
+import ssl
+from pathlib import Path
 from typing import Literal
 from urllib.parse import quote
 
@@ -95,8 +97,19 @@ class AirflowCollector:
         if not self.settings.airflow_enabled: return result('disabled')
         runs = []
         try:
+            verify = True
+            if self.settings.airflow_ca_file:
+                from bankops_agent.evidence.logs import _safe_path
+                path = Path(self.settings.airflow_ca_file)
+                if not path.is_absolute() or str(path).startswith(('//', '\\\\')):
+                    raise ValueError('Trusted local CA required')
+                _safe_path(path)
+                if not path.is_file() or path.stat().st_size > 131072:
+                    raise ValueError('Invalid CA source')
+                verify = ssl.create_default_context(cafile=str(path))
             async with asyncio.timeout(self.settings.airflow_timeout_seconds):
                 async with httpx.AsyncClient(transport=self.transport,trust_env=False,follow_redirects=False,
+                    verify=verify,
                     timeout=self.settings.airflow_timeout_seconds,
                     headers={'Authorization':'Bearer '+self.settings.airflow_api_token.get_secret_value()}) as client:
                     async def get(path,params=None):
@@ -155,5 +168,6 @@ class AirflowCollector:
                             partial=True
                     return result('partial' if partial else 'ok' if runs else 'missing',runs=tuple(runs),truncated=total > len(records))
         except (TimeoutError,httpx.TimeoutException): return result('timeout',runs=tuple(runs))
+        except OSError: return result('unavailable',runs=tuple(runs))
         except httpx.HTTPError: return result('unavailable',runs=tuple(runs))
         except (ValueError,KeyError,TypeError,AttributeError,RecursionError,OverflowError): return result('invalid_response',runs=tuple(runs))

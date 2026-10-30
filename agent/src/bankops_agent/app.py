@@ -41,6 +41,12 @@ def create_app(settings: Settings | None = None, *, logger: logging.Logger | Non
     api.state.jaeger_collector = JaegerCollector(settings)
     api.state.log_collector = LogCollector(settings)
     api.state.airflow_collector = AirflowCollector(settings)
+    if settings.evidence_mode == "synthetic_demo":
+        from bankops_agent.rag.synthetic import collectors
+        synthetic = collectors(settings)
+        api.state.prometheus_collector = synthetic.prometheus_collector
+        api.state.jaeger_collector = synthetic.jaeger_collector
+        api.state.log_collector = synthetic.log_collector
     api.state.rca_analyzer = RCAAnalyzer(settings, create_provider(settings))
     api.state.investigation_workflow = build_workflow(api.state)
     api.include_router(router)

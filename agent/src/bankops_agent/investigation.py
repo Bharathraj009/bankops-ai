@@ -35,6 +35,7 @@ class InvestigationReport(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     started_at: datetime
     completed_at: datetime
+    evidence_mode: Literal["operational", "synthetic_demo"] = "operational"
     evidence_status: Literal["complete", "partial", "unavailable"]
     detection: DetectionResult
     traces: JaegerEvidence
@@ -98,7 +99,7 @@ async def collect_support(state) -> tuple[JaegerEvidence, LogEvidence]:
 
 
 def assemble_report(started: datetime, decision: DetectionResult,
-                    traces: JaegerEvidence, logs: LogEvidence) -> InvestigationReport:
+                    traces: JaegerEvidence, logs: LogEvidence, *, evidence_mode="operational") -> InvestigationReport:
     groups = {}
     trace_ids = {trace.trace_id for trace in traces.traces}
     for index, event in enumerate(logs.events):
@@ -112,7 +113,7 @@ def assemble_report(started: datetime, decision: DetectionResult,
     if decision.airflow is not None:
         complete = complete and decision.airflow.status == 'ok'
         useful = useful or bool(decision.airflow.runs)
-    return InvestigationReport(started_at=started, completed_at=datetime.now(UTC),
+    return InvestigationReport(started_at=started, completed_at=datetime.now(UTC), evidence_mode=evidence_mode,
         evidence_status="complete" if complete else "partial" if useful else "unavailable",
         detection=decision, traces=traces, logs=logs, correlations=correlations,
         observed_facts=ObservedFacts(returned_trace_count=len(traces.traces),
@@ -126,4 +127,4 @@ def assemble_report(started: datetime, decision: DetectionResult,
 async def investigate(state) -> InvestigationReport:
     started = datetime.now(UTC)
     decision, (traces, logs) = await asyncio.gather(collect_detection(state), collect_support(state))
-    return assemble_report(started, decision, traces, logs)
+    return assemble_report(started, decision, traces, logs, evidence_mode=state.settings.evidence_mode)

@@ -1,0 +1,8 @@
+{
+  "id": "database-latency",
+  "title": "Troubleshooting: slow database calls and p95 latency",
+  "category": "troubleshooting",
+  "data_classification": "synthetic",
+  "supports": ["database_call_degradation", "latency_degradation"],
+  "content": "In a synthetic troubleshooting exercise, elevated p95 latency was compared with slow or failed database call spans. A verified slow database call supports a database call degradation hypothesis. Aggregate latency without a slow or failed database span does not support that more specific hypothesis. Inspect safe trace timings and compare metric windows. Connection pool exhaustion, transient dependency failures, and request queueing are possibilities to investigate, not confirmed conclusions. Do not execute SQL, change balances, alter credentials, or restart processes from model output. The reference supplies troubleshooting context only; current evidence must independently support any hypothesis."
+}

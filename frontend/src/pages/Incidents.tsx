@@ -287,11 +287,27 @@ export function EvidenceReport({ report }: { report: Report }) {
                 : 'Undetermined'}
             </Badge>
             <p>{rcaReasons[rca.reason]}. No root cause is confirmed.</p>
+            <section aria-label="Retrieved evidence references">
+              <h3>Retrieved evidence references</h3>
+              <p>Synthetic troubleshooting context, not proof of causality.</p>
+              {rca.sources.length === 0 && <p>No retrieved documents.</p>}
+              {rca.sources.map((source) => (
+                <details key={source.id}>
+                  <summary>{source.title}</summary>
+                  <p className="bank-id">{source.id}</p>
+                  <p>{source.reference}</p>
+                  <p>{source.content}</p>
+                </details>
+              ))}
+            </section>
             {rca.hypotheses.map((h) => (
               <article className="hypothesis-card" key={h.kind}>
                 <h3>{kinds[h.kind]}</h3>
                 <Badge>Reported confidence: {h.confidence}</Badge>
                 <p>Supporting evidence references:</p>
+                {h.documents.length > 0 && (
+                  <p>Retrieved citations: {h.documents.join(', ')}</p>
+                )}
                 <ul>
                   {h.refs.map((id) => (
                     <li key={id}>

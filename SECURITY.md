@@ -1,8 +1,21 @@
 # BankOps AI security
 
+**Current publication update:** source and tests through Step 75 are prepared
+locally, without commit/push or a new hosted run. See [publication checks](PUBLICATION_READINESS.md)
+and [real scheduled integration evidence](STEP75_INTEGRATION_REPORT.md). Cloud
+inference is mocked in tests and disabled by default; operational export is
+blocked. This portfolio demonstration is not a production banking system.
+The dated scan/security histories below remain historical, not current clearance.
+
+**Step 72C local verification:** [risk assessment and remaining findings](security/STEP72C_FINDINGS.md).
+49 -> 44 unique HIGH findings, zero CRITICAL. The tested Jaeger rebuild passes;
+five OS image gates remain blocked. Not pushed or deployed.
+
+
 **Step 72 readiness:** [local preflight and hosted verification approval boundary](security/STEP72_READINESS.md).
-The current history includes development banking response artifacts; publication
-is blocked pending review. Strict vulnerability gates remain enabled.
+Historical scope: the original development history contains private response
+artifacts. This separate public checkout has sanitized history and excludes them;
+see PUBLICATION_READINESS.md for the current audit. Strict gates remain enabled.
 
 **Step 71B complete:** [final closeout and remaining risks](security/STEP71B_CLOSEOUT.md).
 All nine retained development services are healthy; six remediated image security

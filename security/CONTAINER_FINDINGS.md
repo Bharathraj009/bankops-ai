@@ -1,5 +1,9 @@
 # Step 71B container vulnerability inventory
 
+Latest local assessment: [Step 72C](STEP72C_FINDINGS.md). The Step 71B rows below
+are historical; five Jaeger findings are now resolved in the verified local image.
+
+
 Final artifact, container and workflow verification: [Step 71B closeout](STEP71B_CLOSEOUT.md).
 
 Generated from the actual baseline and final Trivy JSON reports. Snapshot: October 28, 2026 (America/Chicago).

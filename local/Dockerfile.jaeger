@@ -1,4 +1,15 @@
+FROM golang:1.27.3-bookworm@sha256:d9b6a1beb9474adc2a1ce842573639b44b2a0dd49b6669f51d3821baf9ec37c9 AS build
+ENV GOTOOLCHAIN=local GOMAXPROCS=2
+WORKDIR /src
+ADD --checksum=sha256:74ff87bf31cfc1512b1c309831f9f47319a0291c8ec8ff3cf2956917a0a9847f https://codeload.github.com/jaegertracing/jaeger/tar.gz/462bb49fcff9af4be9556bf0206d07f5171bd8d7 /tmp/jaeger.tar.gz
+ADD --checksum=sha256:18d9deb8aaf19ba9a5f9709417f8ae7ca71d99937ea68140a866d9d703da3d6a https://github.com/jaegertracing/jaeger-ui/releases/download/v2.22.0/assets.tar.gz /tmp/ui.tar.gz
+RUN tar -xzf /tmp/jaeger.tar.gz --strip-components=1 -C /src     && tar -xzf /tmp/ui.tar.gz -C /src     && cp -r packages/jaeger-ui/build/. cmd/jaeger/internal/extension/jaegerquery/internal/ui/actual/     && find cmd/jaeger/internal/extension/jaegerquery/internal/ui/actual -type f ! -name .gitignore -exec gzip -n '{}' +
+RUN --mount=type=cache,target=/go/pkg/mod     cp go.mod /tmp/original-go.mod     && go get golang.org/x/net@v0.60.0     && go mod verify     && (diff -u /tmp/original-go.mod go.mod > /tmp/module-changes.diff || test "$?" -eq 1)
+RUN cat /tmp/module-changes.diff
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build     CGO_ENABLED=0 go test -p 2 -mod=readonly       ./cmd/jaeger/internal/extension/jaegerquery/internal/ui/...       ./cmd/jaeger/internal/extension/jaegerquery       ./cmd/jaeger/internal/extension/jaegerstorage
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build     CGO_ENABLED=0 go build -p 2 -mod=readonly -trimpath       -ldflags='-s -w -X github.com/jaegertracing/jaeger/internal/version.commitSHA=462bb49fcff9af4be9556bf0206d07f5171bd8d7 -X github.com/jaegertracing/jaeger/internal/version.latestVersion=v2.22.0-bankops.1'       -o /out/jaeger ./cmd/jaeger     && go version -m /out/jaeger
 FROM prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e AS probe
 FROM cr.jaegertracing.io/jaegertracing/jaeger:2.22.0@sha256:836b967b5abcf1f7758066aa6b348619267a2f1459f72d472840570f9bd88a17
+COPY --from=build /out/jaeger /cmd/jaeger/jaeger-linux
 COPY --from=probe /bin/busybox /busybox
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=12 CMD ["/busybox", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:16686/api/v3/services"]

@@ -113,12 +113,15 @@ export interface Trace {
 }
 export interface LogEvent {
   time: string
-  level: 'WARN' | 'ERROR'
+  level: 'INFO' | 'WARN' | 'ERROR'
   category: 'http_request_completed' | 'transfer_outcome'
   trace: string | null
   correlation: string | null
 }
 export const kinds = {
+  reconciliation_evidence_gap: 'Reconciliation evidence gap',
+  reconciliation_integrity_failure: 'Reconciliation integrity failure',
+  reconciliation_workflow_failure: 'Reconciliation workflow failure',
   http_error_degradation: 'HTTP error degradation',
   latency_degradation: 'Latency degradation',
   transfer_failure_degradation: 'Transfer failure degradation',
@@ -148,13 +151,28 @@ export const rcaReasons = {
   rate_limited: 'Provider rate limited',
   invalid_output: 'Provider output rejected by validation',
   input_limit: 'Evidence exceeded the analysis input limit',
+  outbound_blocked: 'External inference blocked by synthetic-data policy',
+  retrieval_unavailable: 'Local retrieval corpus unavailable',
+  no_retrieval_match: 'No supported troubleshooting references retrieved',
 } as const
 type Kind = keyof typeof kinds
 export interface RCA {
+  sources: {
+    id: string
+    title: string
+    content: string
+    reference: string
+    supports: Kind[]
+  }[]
   status: 'hypotheses' | 'undetermined'
   reason: keyof typeof rcaReasons
   at: string
-  hypotheses: { kind: Kind; confidence: 'low' | 'moderate'; refs: string[] }[]
+  hypotheses: {
+    kind: Kind
+    confidence: 'low' | 'moderate'
+    refs: string[]
+    documents: string[]
+  }[]
   evidence: { id: string; source: string; at: string }[]
   uncertainty: (keyof typeof uncertaintyLabels)[]
   steps: (keyof typeof stepLabels)[]
@@ -217,7 +235,7 @@ export function parseReport(raw: unknown, workflow = false): Report {
     const v = obj(raw)
     return {
       time: date(v.timestamp),
-      level: choice(v.level, ['WARN', 'ERROR'] as const),
+      level: choice(v.level, ['INFO', 'WARN', 'ERROR'] as const),
       category: choice(v.event_type, [
         'http_request_completed',
         'transfer_outcome',
@@ -302,6 +320,53 @@ export function parseReport(raw: unknown, workflow = false): Report {
 function parseRCA(raw: unknown, report: Report): RCA {
   const r = obj(raw)
   if (r.root_cause_confirmed !== false) fail()
+  const retrieval = r.retrieval == null ? null : obj(r.retrieval)
+  if (retrieval)
+    choice(retrieval.status, ['matched', 'no_match', 'unavailable'] as const)
+  const sources = retrieval
+    ? list(retrieval.sources, 6).map((raw) => {
+        const s = obj(raw),
+          id = text(s.id),
+          document = text(s.document_id),
+          hash = text(s.sha256)
+        if (
+          !/^[a-z][a-z0-9-]{2,47}$/.test(document) ||
+          !/^[a-f0-9]{64}$/.test(hash) ||
+          !new RegExp(
+            `^doc\\.${document}\\.${hash.slice(0, 12)}\\.c[0-9]{3}$`,
+          ).test(id) ||
+          s.source !== `corpus://synthetic/${document}`
+        )
+          fail()
+        choice(s.category, ['historical_incident', 'troubleshooting'] as const)
+        const title = text(s.title),
+          content = text(s.content)
+        if (
+          !title.length ||
+          title.length > 120 ||
+          !content.length ||
+          content.length > 12000
+        )
+          fail()
+        const reviewed = s.reviewed === true
+        return {
+          id,
+          title: reviewed ? title : 'Unreviewed local document',
+          content: reviewed
+            ? content
+            : 'Content hidden pending publication review.',
+          reference: text(s.source),
+          supports: list(s.supports, 5).map((k) =>
+            choice(k, Object.keys(kinds) as Kind[]),
+          ),
+        }
+      })
+    : []
+  if (
+    new Set(sources.map((s) => s.id)).size !== sources.length ||
+    (retrieval && (retrieval.status === 'matched') !== sources.length > 0)
+  )
+    fail()
   const evidence = list(r.evidence, 24).map((raw) => {
     const v = obj(raw),
       id = text(v.id),
@@ -320,6 +385,9 @@ function parseRCA(raw: unknown, report: Report): RCA {
       )
         fail()
       const map: Record<string, Kind> = {
+        reconciliation_insufficient_data: 'reconciliation_evidence_gap',
+        reconciliation_financial_violations: 'reconciliation_integrity_failure',
+        reconciliation_task_failure: 'reconciliation_workflow_failure',
         high_http_error_rate: 'http_error_degradation',
         elevated_p95_latency: 'latency_degradation',
         high_transfer_failure_rate: 'transfer_failure_degradation',
@@ -329,9 +397,11 @@ function parseRCA(raw: unknown, report: Report): RCA {
       if (
         date(v.timestamp) !== report.detection.detectedAt ||
         v.observation !==
-          (rule === 'banking_unavailable'
-            ? 'service_down'
-            : 'threshold_reached')
+          (rule.startsWith('reconciliation_')
+            ? 'reconciliation_failed'
+            : rule === 'banking_unavailable'
+              ? 'service_down'
+              : 'threshold_reached')
       )
         fail()
     }
@@ -375,6 +445,18 @@ function parseRCA(raw: unknown, report: Report): RCA {
     const h = obj(raw),
       kind = choice(h.kind, Object.keys(kinds) as Kind[]),
       refs = list(h.supporting_evidence, 5).map(text)
+    const documents =
+      h.retrieved_sources === undefined
+        ? []
+        : list(h.retrieved_sources, 5).map(text)
+    if (
+      (retrieval && !documents.length) ||
+      new Set(documents).size !== documents.length ||
+      documents.some(
+        (id) => !sources.some((s) => s.id === id && s.supports.includes(kind)),
+      )
+    )
+      fail()
     if (
       !refs.length ||
       new Set(refs).size !== refs.length ||
@@ -387,6 +469,7 @@ function parseRCA(raw: unknown, report: Report): RCA {
       kind,
       confidence: choice(h.confidence, ['low', 'moderate'] as const),
       refs,
+      documents,
     }
   })
   const status = choice(r.status, ['hypotheses', 'undetermined'] as const),
@@ -416,6 +499,7 @@ function parseRCA(raw: unknown, report: Report): RCA {
   )
     fail()
   return {
+    sources,
     status,
     reason,
     at: date(r.analyzed_at),

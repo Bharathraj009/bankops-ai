@@ -26,6 +26,9 @@ bankops-agent = "bankops_agent.main:run"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"bankops_agent.rag" = ["corpus/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"

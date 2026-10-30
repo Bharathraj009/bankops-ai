@@ -1,0 +1,8 @@
+{
+  "id": "http-errors",
+  "title": "Synthetic historical incident: elevated HTTP errors",
+  "category": "historical_incident",
+  "data_classification": "synthetic",
+  "supports": ["http_error_degradation"],
+  "content": "This fictional incident used synthetic requests only. A high HTTP error rate crossed the configured threshold while request traffic was sufficient. The investigation compared metric windows and inspected sanitized failure events. Error counts alone did not prove a database failure or a confirmed root cause. A rejected request can be a valid authorization or validation outcome rather than a server fault. Compare aggregate error ratios with service availability and verified trace timings. Preserve uncertainty and collect additional evidence before proposing any action. Historical similarity is context, not proof of the cause of a current incident."
+}
