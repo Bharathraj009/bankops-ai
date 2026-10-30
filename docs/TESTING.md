@@ -52,18 +52,18 @@ Compose project, accelerates only the copied DAG's schedule/retries, creates a
 read-permission fault, observes a scheduled run, drives the real dashboard and
 preserves volumes on teardown. It never points at retained banking data.
 The fixture uses a TLS front door with an explicit CA and a read-only viewer token.
-Real LLM inference remains disabled. See STEP75_INTEGRATION_REPORT.md for the
+Real LLM inference remains disabled. See [the scheduled integration report](verification/STEP75_INTEGRATION_REPORT.md) for the
 actual observed result and limitations, including partial idle banking metrics.
 
 ## Security gates and evidence
 
 The image workflow builds seven image targets, uploads SBOMs and scan artifacts,
 and fails on any HIGH/CRITICAL finding, including unfixed advisories. Gates are
-not suppressed or weakened to obtain green CI. Dated Step 72C scan results are
-historical; a future push must run the current scanners again. No images are
+not suppressed or weakened to obtain green CI. [Hosted baseline scans](verification/HOSTED_BASELINE.md) are dated;
+a future push must run the current scanners again. No images are
 published and no deployment is performed by these workflows.
 
 Raw logs, local secrets, database files, screenshots containing banking records
 and generated scan/test reports are excluded from publication. Authored Markdown
-reports contain aggregate results and explicit scope limits. Fresh sanitized
-snapshot check results are in PUBLICATION_READINESS.md.
+reports contain aggregate results and explicit scope limits. Dated preparation and hosted results are in
+[publication status](../PUBLICATION_READINESS.md).

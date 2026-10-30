@@ -1,26 +1,19 @@
 # GitHub Actions and verification history
 
-**Current update:** implementation through Step 75 is prepared in the sanitized
-checkout. [Publication checks](PUBLICATION_READINESS.md) report tests rerun on
-this snapshot. No new hosted CI run has occurred. A future approved push to
-main triggers application tests and all seven image build/SBOM/scan targets.
-Strict HIGH/CRITICAL gates include unfixed findings. The last Step 72C scan
-left five image gates blocked; this dated result is not a fresh scan of the
-Step 75 images. No registry publishing or deployment is enabled.
+Current public baseline: `8dff277`. [Application CI](https://github.com/Bharathraj009/bankops-ai/actions/runs/41002225074)
+passed; [hosted image scans](docs/verification/HOSTED_BASELINE.md) blocked five
+images on outstanding HIGH vulnerabilities, with zero CRITICAL. Strict gates
+include unfixed findings and remain unchanged. Banking and Jaeger passed.
+No registry publishing or deployment is enabled.
 
-**Step 72C:** [compatible Jaeger remediation and final local gates](security/STEP72C_FINDINGS.md).
-The unchanged hosted Step 72B test workflow passed; the revised Jaeger Dockerfile
-has been verified locally and awaits separately approved publication.
+Investigation initiation is manual, cloud inference was tested only with mocks,
+and inference/remediation remain disabled by default. Operational financial
+evidence cannot be exported. This is not production banking software.
+See [publication status](PUBLICATION_READINESS.md).
 
-
-**Step 72:** [GitHub-hosted readiness and publication blockers](security/STEP72_READINESS.md).
-Historical Step 72 scope: these were pre-publication requirements for the
-original workspace. The public repository now exists; the current update remains
-uncommitted and awaits explicit approval before any new hosted execution.
-
-Step 71B final artifact, container, Git and workflow verification is recorded in
-[the closeout report](security/STEP71B_CLOSEOUT.md). Its October 29 container
-status supersedes the historical October 28 container status below.
+The milestone sections below preserve dated evidence and intermediate behavior.
+Their test counts and runtime status apply to the stated milestone. Earlier
+pending-publication statements do not describe the current public baseline.
 
 The workflow is [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 It runs on pushes to `main`, pull requests targeting `main`, and manual

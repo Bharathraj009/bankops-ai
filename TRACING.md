@@ -1,5 +1,9 @@
 # OpenTelemetry tracing
 
+Dated verification sections below record historical fixture observations, not
+current service state or performance benchmarks. For current startup use the
+[local runbook](local/README.md).
+
 Tracing uses OpenTelemetry SDK/API dependencies managed by Spring Boot 4.0.8's
 BOM and Spring AOP. Explicit instrumentation is used instead of an agent or
 automatic HTTP/JDBC instrumentation, so raw URLs, SQL, database parameters,

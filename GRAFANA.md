@@ -1,5 +1,13 @@
 # BankOps AI Grafana dashboard
 
+> For the complete current platform, use the [local runbook](local/README.md).
+> The setup below describes the older root Compose/host-run arrangement, with
+> different ports and manual database provisioning. Its dated observations are
+> historical, not performance benchmarks or a statement that services run now.
+> Root Compose requires `BANKOPS_POSTGRES_ADMIN_PASSWORD` and
+> `BANKOPS_GRAFANA_ADMIN_PASSWORD`; `.env.example` alone does not provision the
+> current migration/runtime identities. See [database setup](database/README.md).
+
 Configure `.env` (ignored by Git) with a unique strong
 `BANKOPS_GRAFANA_ADMIN_PASSWORD` and optionally `BANKOPS_GRAFANA_ADMIN_USER`
 (default `admin`). `.env.example` contains placeholders only. Never commit real

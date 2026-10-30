@@ -1,3 +1,7 @@
+> Historical local assessment, 2026-10-29. The changes were subsequently published
+> in `8dff277`; see [hosted verification](../docs/verification/HOSTED_BASELINE.md).
+> Pending-publication wording below records the original local review state.
+
 # Step 72C: remaining security findings
 
 Verified October 29, 2026 (America/Chicago). **49 -> 44 unique HIGH findings;

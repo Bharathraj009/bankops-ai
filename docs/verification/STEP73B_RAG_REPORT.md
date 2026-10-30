@@ -107,7 +107,7 @@ reviewed and retained. Unrelated prior changes were not reset or discarded.
 
 ## Remaining operational limitations
 
-See [agent/RAG.md](agent/RAG.md) for configuration and provider documentation.
+See [agent/RAG.md](../../agent/RAG.md) for configuration and provider documentation.
 Actual inference requires an operator-selected available model, externally
 injected credentials, deliberate cost acceptance and explicit synthetic-only
 opt-in. None was enabled here. store=false does not establish zero retention.

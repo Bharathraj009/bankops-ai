@@ -1,4 +1,4 @@
-# BankOps AI reliability agent foundation
+# BankOps AI reliability agent
 
 Independent FastAPI service for **Python 3.12**. `GET /health` returns HTTP 200:
 

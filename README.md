@@ -40,11 +40,12 @@ No account/customer data is shown. This image is not evidence of a live incident
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TB
   User[Operator: explicit investigation] --> UI[React + TypeScript]
   UI --> Proxy[Same-origin route and authorization boundary]
   Proxy --> Agent[FastAPI reliability agent]
-  Banking[Spring Boot banking API] --> DB[(PostgreSQL ledger)]
+  Proxy --> Banking[Spring Boot banking API]
+  Banking --> DB[(PostgreSQL ledger)]
   Banking --> Metrics[Prometheus / Grafana]
   Banking --> Traces[OpenTelemetry / Jaeger]
   Banking --> Logs[Sanitized native JSONL]
@@ -55,9 +56,9 @@ flowchart LR
   Agent -->|Read only| Logs
   Agent --> Graph[Four-node LangGraph]
   Graph --> RAG[Local BM25 and synthetic runbooks]
-  RAG --> Report[Evidence report and source references]
-  Report --> UI
+  RAG --> Report[Evidence report returned to UI with source references]
   Reviewer[Separate human reviewer] --> Approvals[Approval and audit boundary]
+  Approvals --> Agent
 ```
 
 The provider adapter is a separate opt-in synthetic-only path. No diagram arrow
@@ -114,10 +115,10 @@ python3.12 local/platform.py stop
 
 Source changes require explicit image builds; ordinary startup does not silently
 refresh existing images. The normal stack keeps Airflow evidence and native log
-ingestion disabled until configured. The full Step 75 connection is verified in
-an isolated fixture with TLS/viewer credentials, not automatically enabled by
+ingestion disabled until configured. The scheduled reconciliation connection
+was verified in an isolated fixture with TLS/viewer credentials, not automatically enabled by
 the quick start. See [local runbook](local/README.md), [RAG configuration](agent/RAG.md)
-and [Step 75 integration evidence](STEP75_INTEGRATION_REPORT.md).
+and [scheduled integration evidence](docs/verification/STEP75_INTEGRATION_REPORT.md).
 
 ## Test and verify
 
@@ -156,12 +157,13 @@ images/tools; they are not a one-command cross-platform installer.
 
 ### Verified implementation baseline
 
-Step 75 recorded **544 agent tests passed** (two optional browser cases skipped),
+The dated integration baseline recorded **544 agent tests passed**
+(two optional browser cases skipped),
 **62 focused frontend tests passed**, **7 focused Java tests passed**, and actual
 scheduled Airflow-to-dashboard execution in desktop/mobile-sized Chromium.
 These are documented implementation results, not a claim that every test was
 rerun on every fresh clone. See [publication readiness](PUBLICATION_READINESS.md)
-for checks actually rerun against this sanitized snapshot.
+for dated preparation checks and subsequent hosted results.
 
 ## Security and known limitations
 
@@ -174,9 +176,10 @@ for checks actually rerun against this sanitized snapshot.
 - **Partial evidence stays partial:** idle banking traffic metrics can be missing.
   A failed reconciliation DAG can correctly indicate unavailable evidence rather
   than financial corruption. RAG retrieval is not causal proof.
-- **Security gates remain strict:** the last Step 72C scan recorded 44 HIGH package
-  findings, zero CRITICAL, with five image gates blocked. This is a dated result,
-  not a fresh scan of every Step 75 image. No findings are suppressed to get green CI.
+- **Security gates remain strict:** hosted scans for `8dff277` recorded 44 unique
+  HIGH advisory/package/version findings and zero CRITICAL; five image gates
+  blocked. Banking and Jaeger passed. See [per-image results](docs/verification/HOSTED_BASELINE.md).
+  No findings are suppressed to get green CI.
 - **Hosted status:** consult GitHub Actions for results on the current commit.
   Dated local checks and earlier workflow runs do not validate later code changes.
 
@@ -196,4 +199,5 @@ runtime/test/scan evidence are not part of the publication snapshot.
 - `local/` — guarded development launcher and disposable integration harnesses
 - `.github/` — tests, image builds, SBOM/scanning and CI safety contracts
 - `security/` — security controls, assessments and dated findings
-- `docs/` — architecture, testing and reviewed screenshots
+- `docs/` — architecture, testing, screenshots and dated verification records
+- `backups/` - historical verification source only; see [safety notes](backups/README.md)

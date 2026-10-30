@@ -1,8 +1,8 @@
 # Unified local platform
 
-## Step 69 — current quick start
+## Current quick start
 
-From the repository root with Python 3.12+, local Docker Desktop/Engine and
+From the repository root with Python 3.12, local Docker Desktop/Engine and
 Docker Compose 2.24.4+:
 
 ```powershell

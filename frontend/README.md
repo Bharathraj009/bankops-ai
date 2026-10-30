@@ -1,15 +1,12 @@
-# BankOps AI banking workspace
+# BankOps AI operations workspace
 
-React + TypeScript + Vite, Tailwind CSS, Lucide and Motion. Step 58 connects the
-Banking workspace to the existing Spring Boot APIs. Step 59 adds live read-only
-Monitoring through the existing agent. Banking code, migrations,
-agent, Airflow and monitoring are unchanged.
+React, TypeScript and Vite dashboard for banking, customer identity, read-only
+monitoring, incident investigation, reconciliation and human approval workflows.
+The `/banking` workspace requires an explicit operator credential; customer
+operations use the separate authenticated [Customer Banking workspace](CUSTOMER_BANKING.md).
+See [security boundaries](../SECURITY.md) and the [complete local platform](../local/README.md).
 
-Step 64 adds a separate authenticated [Customer Banking workspace](CUSTOMER_BANKING.md)
-at `/customer`. The legacy `/banking` workspace now requires an explicit operator
-credential; Vite does not inject banking authority. This supersedes the earlier
-Step 58 authentication limitations below. See [SECURITY.md](../SECURITY.md) for
-the current boundaries and isolated verification results.
+Milestone verification sections below preserve dated implementation evidence.
 
 ## Run
 

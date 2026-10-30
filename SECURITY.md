@@ -1,56 +1,19 @@
 # BankOps AI security
 
-**Current publication update:** source and tests through Step 75 are prepared
-locally, without commit/push or a new hosted run. See [publication checks](PUBLICATION_READINESS.md)
-and [real scheduled integration evidence](STEP75_INTEGRATION_REPORT.md). Cloud
-inference is mocked in tests and disabled by default; operational export is
-blocked. This portfolio demonstration is not a production banking system.
-The dated scan/security histories below remain historical, not current clearance.
+Current public baseline: `8dff277`. [Application CI](https://github.com/Bharathraj009/bankops-ai/actions/runs/41002225074)
+passed; [hosted image scans](docs/verification/HOSTED_BASELINE.md) blocked five
+images on outstanding HIGH vulnerabilities, with zero CRITICAL. Strict gates
+include unfixed findings and remain unchanged. Banking and Jaeger passed.
+No registry publishing or deployment is enabled.
 
-**Step 72C local verification:** [risk assessment and remaining findings](security/STEP72C_FINDINGS.md).
-49 -> 44 unique HIGH findings, zero CRITICAL. The tested Jaeger rebuild passes;
-five OS image gates remain blocked. Not pushed or deployed.
+Investigation initiation is manual, cloud inference was tested only with mocks,
+and inference/remediation remain disabled by default. Operational financial
+evidence cannot be exported. This is not production banking software.
+See [publication status](PUBLICATION_READINESS.md).
 
-
-**Step 72 readiness:** [local preflight and hosted verification approval boundary](security/STEP72_READINESS.md).
-Historical scope: the original development history contains private response
-artifacts. This separate public checkout has sanitized history and excludes them;
-see PUBLICATION_READINESS.md for the current audit. Strict gates remain enabled.
-
-**Step 71B complete:** [final closeout and remaining risks](security/STEP71B_CLOSEOUT.md).
-All nine retained development services are healthy; six remediated image security
-gates remain blocked by HIGH findings. Running development images were not replaced.
-
-**Step 71B verified remediation:** [before/after results and compatibility evidence](CI.md#step-71b-remediation-results)
-reduce 245 unique findings (23 CRITICAL) to 49 HIGH and zero CRITICAL. Strict HIGH
-gates still block affected images. The [full advisory inventory](security/CONTAINER_FINDINGS.md)
-records installed/fixed versions, shared images, dispositions and remaining blockers.
-
-**Step 71 image security:** [Docker builds, Trivy gates and SBOM evidence](CI.md#step-71-docker-images-and-security-scanning)
-covers all maintained custom images, with immutable base/scanner digests and
-blocking HIGH/CRITICAL findings, including unfixed issues. This extends the test
-pipeline without publishing images or granting registry/security-event access.
-
-**Step 70 CI:** [GitHub Actions architecture and isolation](CI.md) uses fresh
-job-local PostgreSQL services, dedicated migration/runtime ACL tests, read-only
-repository permissions and no development or cloud credentials.
-
-**Step 67 local Docker integration:** see [the unified runbook](local/README.md).
-The isolated full stack now uses dedicated migration/runtime identities, the
-Step 65 ACLs and SELECT-only Airflow access. Existing development databases and
-volumes remain untouched. Customer APIs, inference and remediation remain disabled
-in this configuration. Step 66 results below remain historical, independently
-verified results; Step 67 results and limits are documented in the runbook.
-
-**Latest image verification:** [Step 71B remediation results](CI.md#step-71b-remediation-results).
-**Integrated security regression history:** [Step 66](#step-66--end-to-end-security-regression-verification).
-**Current database security:** [Step 65 least-privilege access](#step-65--database-security-and-least-privilege-access).
-Customer authentication/ownership remains described in [Step 64](#step-64--implemented-customer-identity-and-ownership).
-The Step 63 audit and initial Step 64 design review below are historical records.
-The approved local identity design has now been implemented. In particular,
-banking APIs now require authentication on loopback too, and Vite no longer
-injects an operator key. The implementation section supersedes those earlier
-descriptions; it is not a production deployment approval.
+The milestone sections below preserve dated evidence and intermediate behavior.
+Their test counts and runtime status apply to the stated milestone. Earlier
+pending-publication statements do not describe the current public baseline.
 
 ## Step 63 — security audit and hardening (historical)
 

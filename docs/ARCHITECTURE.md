@@ -46,11 +46,12 @@ sequenceDiagram
   Agent-->>UI: Deterministic report and local source references
 ```
 
-Step 75 used a temporary restriction on the fixture reader's schema-history
+The scheduled integration fixture temporarily restricted the reader's
+schema-history
 SELECT permission. Connectivity succeeded; reconciliation returned unavailable
 evidence; validators failed intentionally. No banking records were changed.
 The scheduled run, not a fabricated API response, reached Chromium. Initiation
-of investigation remained manual and pull-based. See the dated Step 75 report.
+of investigation remained manual and pull-based. See the [dated integration report](verification/STEP75_INTEGRATION_REPORT.md).
 
 ## Optional model path
 

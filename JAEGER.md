@@ -1,5 +1,15 @@
 # Jaeger tracing backend
 
+> For the complete current platform, use the [local runbook](local/README.md).
+> The setup below describes the older root Compose/host-run arrangement, with
+> different ports and manual database provisioning. Its dated observations are
+> historical, not performance benchmarks or a statement that services run now.
+> Root Compose requires `BANKOPS_POSTGRES_ADMIN_PASSWORD` and
+> `BANKOPS_GRAFANA_ADMIN_PASSWORD`; `.env.example` alone does not provision the
+> current migration/runtime identities. See [database setup](database/README.md).
+> The root Compose Jaeger image is the upstream image; the passing hosted
+> Jaeger scan covers the custom `local/Dockerfile.jaeger` used by the unified stack.
+
 From the repository root:
 
 ```powershell
@@ -74,7 +84,7 @@ All five traces (15 spans) were retrieved from Jaeger's raw query API. The
 matching retry contained `http.request` → `transfer.create` → three `db.call`
 children. Each trace's server span ID and trace ID matched both response context
 and correlated structured JSON events. Example verified trace:
-[matching retry](http://localhost:16686/trace/093685c3678f4109b75f77f21cacc8d6).
+`093685c3678f4109b75f77f21cacc8d6` (historical transient trace; not a persistent evidence link).
 
 Audits passed for bounded span names, resource/attribute allowlists, empty events,
 links and exception text, and absent baggage/vendor tracestate. Banking account

@@ -1,28 +1,25 @@
-# Sanitized public repository
+# Public repository scope
 
-This checkout is the separate publication repository for
-https://github.com/Bharathraj009/bankops-ai (main). Its existing initial public
-commit and subsequent history are preserved; no development Git directory,
-objects, commits or remotes were copied. The development repository remains
-separate and unchanged.
+The public repository is [Bharathraj009/bankops-ai](https://github.com/Bharathraj009/bankops-ai).
+The implementation baseline was committed and pushed as `8dff277` on `main`.
+See [publication status](PUBLICATION_READINESS.md) and
+[hosted verification](docs/verification/HOSTED_BASELINE.md).
 
-This proposed update includes reviewed source, tests, configuration templates
-and authored documentation through Step 75. Existing unpublished Step 72C
-Jaeger/security fixes are retained. Cloud inference was tested with mocks;
-investigations are manually initiated; the project is a portfolio demonstration,
-not a production banking system.
+This checkout has separate sanitized public history. Development Git objects,
+private banking responses, credentials, dumps, logs, caches, installed dependencies
+and raw generated test/scan evidence are excluded. Ignored `.publication/` outputs
+are private review aids and must never be committed.
 
-Credentials, runtime dotenv files, private banking response artifacts, dumps,
-logs, databases, caches, installed dependencies and raw generated evidence are
-excluded. The only added screenshot is a visually reviewed static workspace
-preview whose test asserts zero service requests. It contains no banking records.
+The project demonstrates banking integrity, observability, read-only reconciliation,
+manual investigation, local retrieval and human approval boundaries. It uses
+synthetic test data and is not production banking software. Cloud inference was
+tested only with mocked transports. Inference and remediation remain disabled by
+default; operational financial evidence cannot be exported to cloud providers.
 
-Authored step reports describe dated tests in disposable synthetic environments.
-They are not raw reports or a claim that all tests ran in this checkout.
-PUBLICATION_READINESS.md records checks performed on the prepared snapshot.
-Private local manifests and scan/check outputs live in ignored .publication/;
-they are review aids and must never be committed.
+[Dated verification records](docs/verification/README.md) preserve preparation and
+implementation evidence. Earlier pending-publication statements describe their
+recorded dates. The screenshot is a static UI preview with no service requests or
+banking records, not evidence of a live incident.
 
-No commit, push, history rewrite, remote change, deployment or container publishing
-has been performed for this update. Explicit approval is required before commit
-or push. The reviewed path manifest is .publication/final-step75/reviewed-paths.txt.
+This follow-up quality review makes local changes only. Commit and push require
+explicit approval; no history rewrite is proposed.

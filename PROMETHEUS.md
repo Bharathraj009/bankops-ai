@@ -1,5 +1,13 @@
 # Development Prometheus
 
+> For the complete current platform, use the [local runbook](local/README.md).
+> The setup below describes the older root Compose/host-run arrangement, with
+> different ports and manual database provisioning. Its dated observations are
+> historical, not performance benchmarks or a statement that services run now.
+> Root Compose requires `BANKOPS_POSTGRES_ADMIN_PASSWORD` and
+> `BANKOPS_GRAFANA_ADMIN_PASSWORD`; `.env.example` alone does not provision the
+> current migration/runtime identities. See [database setup](database/README.md).
+
 Prometheus scrapes the host-run banking service every 15 seconds at
 `host.docker.internal:8081/actuator/prometheus`. Compose adds the host gateway
 mapping for Docker compatibility. The optional `monitoring` Spring profile uses

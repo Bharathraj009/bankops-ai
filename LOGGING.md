@@ -1,5 +1,9 @@
 # Structured JSON logging
 
+Dated verification sections below record historical fixture observations, not
+current service state or performance benchmarks. For current startup use the
+[local runbook](local/README.md).
+
 BankOps uses Spring Boot 4's native ECS JSON console encoder, with no additional
 logging dependency. Each accepted event includes `@timestamp`, `log.level`,
 `service.name` (`banking-service`), `log.logger`, and `message`. ECS nests `log`
