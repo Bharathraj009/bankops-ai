@@ -2,42 +2,32 @@
 
 **Banking integrity, observability and evidence-grounded incident investigation.**
 
-BankOps AI is a portfolio demonstration that combines a Java banking service,
-read-only reconciliation, an observable Python reliability agent and a React
-operations workspace. It demonstrates how to investigate an incident while
-keeping financial writes, evidence collection and human authorization separate.
-
-> **Portfolio demo, not a production banking system.** Investigation initiation
-> is manual. Cloud LLM inference was tested using mocked transports; successful
-> real cloud inference is not claimed. Inference and remediation are disabled by
-> default, and operational banking evidence cannot be exported to cloud providers.
+BankOps AI combines a transactional Java banking service, PostgreSQL ledger,
+read-only Airflow reconciliation, a Python reliability agent and a React operations
+workspace. It connects service symptoms to bounded metrics, traces, logs and
+reconciliation evidence while keeping financial writes and human authorization
+in separate components.
 
 ![BankOps AI operations workspace](docs/images/workspace-overview.png)
 
-*Static workspace preview from a browser test that makes no service requests.
-No account/customer data is shown. This image is not evidence of a live incident.*
+*Static interface preview from a browser test using no service requests or customer data.*
 
-## What this project demonstrates
+## Implemented capabilities
 
-- **Financial correctness:** transactional transfers, double-entry ledger
-  invariants, rollback, idempotency, concurrency and database authorization tests.
-- **Observability:** Prometheus metrics, Grafana dashboards, OpenTelemetry/Jaeger
-  traces and bounded, sanitized native log evidence.
-- **Real orchestration:** four LangGraph nodes collect/detect, assemble evidence
-  and run optional analysis. Failed providers do not erase the deterministic report.
-- **Lightweight RAG:** bounded document ingestion, overlapping chunks, an inverted
-  BM25 index, stable source references and reviewed synthetic runbooks. Generated
-  hypotheses must cite both valid current observations and relevant retrieved IDs.
-- **Airflow integration:** the actual scheduler executed the reconciliation DAG;
-  a controlled read-permission fault reached the agent, RAG and desktop/mobile-sized
-  Chromium dashboard through real APIs in a disposable Compose environment.
-- **Human oversight:** distinct proposer/reviewer roles, explicit confirmations,
-  audit records and disabled-by-default remediation. Model output cannot directly
-  modify banking records.
-- **Honest presentation:** reviewed citations are expandable; unknown sources and
-  missing evidence are handled explicitly. Similarity is not proof of causality.
+- **Banking integrity:** transactional transfers, double-entry ledger invariants,
+  rollback, idempotency, concurrency control and database authorization tests.
+- **Operational evidence:** Prometheus metrics, Grafana dashboards, OpenTelemetry
+  traces through Jaeger and bounded, sanitized native JSONL log collection.
+- **Incident investigation:** deterministic detection and a four-node LangGraph
+  for collection, report assembly, local retrieval and optional hypothesis analysis.
+- **Grounded analysis:** BM25 retrieval over reviewed synthetic runbooks, stable
+  source references, locally validated evidence citations and an expandable citation viewer.
+- **Reconciliation:** a scheduled Airflow DAG checks ledger/account invariants
+  through a SELECT-only database role and exposes bounded task/check summaries.
+- **Human governance:** separate proposer/reviewer roles, explicit confirmations,
+  persistent audit records and gated execution of two read-only verification actions.
 
-## Architecture
+## Architecture and design decisions
 
 ```mermaid
 flowchart TB
@@ -61,9 +51,29 @@ flowchart TB
   Approvals --> Agent
 ```
 
-The provider adapter is a separate opt-in synthetic-only path. No diagram arrow
-implies that operational financial evidence is sent to a cloud model. See
-[architecture and trust boundaries](docs/ARCHITECTURE.md).
+Financial writes pass through Spring Boot and PostgreSQL integrity controls.
+The agent collects operational evidence through bounded read interfaces, without
+financial database credentials. The same-origin proxy restricts routes, methods
+and origins and keeps service credentials on the server.
+
+Detection and evidence remain authoritative when optional model analysis fails.
+Local retrieval supplies traceable runbook references; hypothesis validation checks
+both current observations and cited sources. External inference uses a separate
+synthetic-data profile. See [architecture and evidence boundaries](docs/ARCHITECTURE.md).
+
+## Integration evidence
+
+The [scheduled reconciliation integration](docs/verification/STEP75_INTEGRATION_REPORT.md)
+ran an actual Airflow scheduler against a disposable Compose environment. A
+controlled read-permission fault produced an evidence-gap result that reached the
+agent, LangGraph, local RAG and React dashboard through actual APIs in desktop and
+mobile-sized Chromium. Investigation was explicitly initiated by the operator.
+
+That dated integration record includes **544 passing agent tests** (two opt-in
+browser cases skipped), **62 focused frontend tests** and **7 focused Java tests**.
+[Hosted CI for published baseline `36a88e8`](docs/verification/HOSTED_36A88E8.md)
+subsequently passed all four application jobs. These records distinguish component
+regressions, synthetic browser fixtures and scheduler integration.
 
 ## Technology stack
 
@@ -81,9 +91,8 @@ Dependency versions are pinned in the repository lockfiles and Dockerfiles.
 
 ## Run locally
 
-Prerequisites: Git, Python **3.12**, Docker Desktop/Engine with Compose 2.24.4+
-and sufficient memory for the local services. Java 21 and Node 22 are needed
-for host-side development tests, not ordinary container startup.
+Prerequisites: Git, Python **3.12** and Docker Desktop/Engine with Compose 2.24.4+.
+Host-side development tests also use Java 21 and Node 22.
 
 ```bash
 git clone https://github.com/Bharathraj009/bankops-ai.git
@@ -93,9 +102,9 @@ python3.12 local/platform.py health
 ```
 
 On Windows, use `py -3.12` in place of `python3.12`. Cold builds and Airflow
-startup can take several minutes. The launcher creates ignored local credentials;
-do not reuse real credentials, commit generated settings or connect a real bank DB.
-Existing networks and volumes are preserved. No cloud model or paid API is needed.
+startup can take several minutes. The launcher generates ignored local credentials
+and preserves existing networks and volumes. The default stack runs without a
+cloud model or paid API; use a local synthetic-data environment.
 
 | Local service | URL |
 | --- | --- |
@@ -113,17 +122,16 @@ issues, screenshots or logs. Stop without deleting persistent volumes:
 python3.12 local/platform.py stop
 ```
 
-Source changes require explicit image builds; ordinary startup does not silently
-refresh existing images. The normal stack keeps Airflow evidence and native log
-ingestion disabled until configured. The scheduled reconciliation connection
-was verified in an isolated fixture with TLS/viewer credentials, not automatically enabled by
-the quick start. See [local runbook](local/README.md), [RAG configuration](agent/RAG.md)
-and [scheduled integration evidence](docs/verification/STEP75_INTEGRATION_REPORT.md).
+After source changes, explicitly build the affected images before startup.
+Airflow evidence and native log ingestion require additional configuration; the
+[scheduled integration fixture](docs/verification/STEP75_INTEGRATION_REPORT.md)
+uses viewer credentials, a trusted TLS CA and a read-only log mount. See the
+[local runbook](local/README.md) and [RAG configuration](agent/RAG.md).
 
 ## Test and verify
 
-Use isolated test environments and synthetic records. Never point test DSNs at
-development or production databases.
+Run tests against disposable databases and synthetic records, with test DSNs
+separate from retained development or production data.
 
 ```bash
 # Python agent: run from repository root, with Python 3.12
@@ -148,45 +156,33 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Java 21 banking tests require an explicitly selected disposable PostgreSQL DSN.
-GitHub CI provisions that database; it never uses repository/development secrets.
-Airflow/database tests also require a disposable PostgreSQL instance. See
-[testing guide](docs/TESTING.md) and [CI behavior](CI.md) for commands and boundaries.
-Historical Windows-only integration harnesses require their documented fixture
-images/tools; they are not a one-command cross-platform installer.
+Java and Airflow/database tests require disposable PostgreSQL instances; GitHub
+CI provisions them per job. The [testing guide](docs/TESTING.md) and [CI guide](CI.md)
+provide commands, database boundaries and the platform/image prerequisites for
+the separate scheduler integration harness.
 
-### Verified implementation baseline
+## Deployment scope and limitations
 
-The dated integration baseline recorded **544 agent tests passed**
-(two optional browser cases skipped),
-**62 focused frontend tests passed**, **7 focused Java tests passed**, and actual
-scheduled Airflow-to-dashboard execution in desktop/mobile-sized Chromium.
-These are documented implementation results, not a claim that every test was
-rerun on every fresh clone. See [publication readiness](PUBLICATION_READINESS.md)
-for dated preparation checks and subsequent hosted results.
+- **Deployment:** verified in local/disposable environments. Production deployment,
+  SSO, operational TLS, log rotation and credential lifecycle management require
+  additional engineering; Vite currently serves the local preview/proxy.
+- **Model inference and data:** tests use synthetic data and mocked cloud inference.
+  Successful live cloud inference remains unverified. External inference requires
+  explicit synthetic-profile opt-in; operational banking evidence is blocked from
+  export. Inference and remediation are disabled by default.
+- **Automation:** investigations require an explicit request. Approvals and the two
+  supported read-only actions are separately gated; service restart, scaling and
+  autonomous banking remediation are outside the implemented execution path.
+- **Evidence coverage:** idle traffic can leave metrics incomplete. A reconciliation
+  evidence gap differs from financial corruption, and retrieved similarity does
+  not establish causality. The quick start needs additional configuration for the
+  complete scheduled-evidence/log path described above.
+- **Image security:** baseline `36a88e8` has **44 unique HIGH package findings across
+  eight CVEs, zero CRITICAL, and five blocked image gates**. Banking and Jaeger
+  passed. [Per-image results](docs/verification/HOSTED_36A88E8.md) remain visible;
+  strict HIGH/CRITICAL gates include unfixed findings.
 
-## Security and known limitations
-
-- **Not production-ready:** local preview serving, local credential management,
-  fixture TLS/log plumbing and operational deployment need further engineering.
-- **Manual initiation:** a user explicitly requests investigation. No automatic
-  background watcher, auto-approval or autonomous banking remediation is claimed.
-- **LLM limits:** inference is disabled by default; only mocked cloud execution
-  was verified. Explicit synthetic-only opt-in is required for external inference.
-- **Partial evidence stays partial:** idle banking traffic metrics can be missing.
-  A failed reconciliation DAG can correctly indicate unavailable evidence rather
-  than financial corruption. RAG retrieval is not causal proof.
-- **Security gates remain strict:** hosted scans for `8dff277` recorded 44 unique
-  HIGH advisory/package/version findings and zero CRITICAL; five image gates
-  blocked. Banking and Jaeger passed. See [per-image results](docs/verification/HOSTED_BASELINE.md).
-  No findings are suppressed to get green CI.
-- **Hosted status:** consult GitHub Actions for results on the current commit.
-  Dated local checks and earlier workflow runs do not validate later code changes.
-
-See [security policy](SECURITY.md), [remaining findings](security/STEP72C_FINDINGS.md)
-and [publication scope](PUBLICATION.md). This repository has its own sanitized
-history; development Git objects, banking response artifacts, secrets and raw
-runtime/test/scan evidence are not part of the publication snapshot.
+See [security controls and history](SECURITY.md) and [public repository scope](PUBLICATION.md).
 
 ## Repository map
 

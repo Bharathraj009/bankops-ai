@@ -1,10 +1,9 @@
-# Safe remediation engine foundation (Step 49)
+# Approved read-only execution
 
 Actual loopback HTTP, failure and process-restart verification is recorded in
 [REMEDIATION_VERIFICATION.md](REMEDIATION_VERIFICATION.md).
 
-Execution is **disabled by default**, including production defaults. This step
-supports only `CHECK_SERVICE_HEALTH` and `REFRESH_INCIDENT_EVIDENCE`. It never
+Execution is **disabled by default**. The engine supports exactly `CHECK_SERVICE_HEALTH` and `REFRESH_INCIDENT_EVIDENCE`. It never
 restarts/scales a service, executes a shell, runs an LLM, or changes banking data.
 The legacy proposal action names remain supported by approval APIs for backward
 compatibility, but they are **not executable**.
@@ -25,7 +24,7 @@ configurable URLs, commands, arguments, hosts, accounts or financial values.
 This fixed parameter is part of the safe action's definition, even though the
 existing proposal response shape is unchanged.
 
-New endpoints:
+Endpoints:
 
 | Endpoint | Authorization | Behavior |
 | --- | --- | --- |
@@ -81,7 +80,7 @@ including after failure or timeout. There are **no automatic retries**. A crash
 after claiming, cancellation during claim, or failed final audit persistence
 can leave RUNNING indefinitely. This deliberately fails closed: there is no
 automatic release, re-execution, stale-claim cleanup or recovery endpoint.
-This foundation provides durable at-most-once dispatch, not guaranteed execution
+The engine provides durable at-most-once dispatch, not guaranteed execution
 or distributed exactly-once completion. Completion failure never authorizes
 another dispatch.
 

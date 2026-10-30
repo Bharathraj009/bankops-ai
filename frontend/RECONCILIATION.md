@@ -1,11 +1,11 @@
-# Reconciliation workspace — Step 62
+# Reconciliation workspace
 
 Real local Airflow verification completed on 2026-10-27 is documented in
 [LIVE_AIRFLOW_VERIFICATION.md](LIVE_AIRFLOW_VERIFICATION.md), separately from the
 original synthetic contract verification below.
 
 Open `/reconciliation`. It reads the existing agent's `GET /incidents/detect`
-and projects only the sanitized `airflow` field. No backend contracts changed.
+and projects the sanitized `airflow` field.
 There are no direct Airflow calls, DAG triggers, workflows or financial writes.
 
 ## Configuration

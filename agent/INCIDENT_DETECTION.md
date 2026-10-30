@@ -1,10 +1,12 @@
 # Deterministic incident detection
 
-`GET /incidents/detect` collects a fresh Prometheus snapshot and evaluates four
-rules. It performs only GET requests to Prometheus's instant-query endpoint;
-there are no banking API/database calls, writes, background tasks, incident
-persistence, LLMs, LangGraph, RCA or remediation. `/health` and the existing
-five-metric `/evidence/prometheus` contract retain their behavior.
+`GET /incidents/detect` collects seven aggregate Prometheus queries and evaluates
+four metrics rules. When configured, it also collects bounded Airflow summaries
+and evaluates reconciliation/workflow rules; see [Airflow evidence](AIRFLOW_EVIDENCE.md).
+Detection performs read-only collection on request. The separate
+[LangGraph investigation endpoint](WORKFLOW.md) assembles supporting evidence and
+runs local retrieval/optional analysis. Process health remains independent of
+external evidence sources.
 
 ```powershell
 Invoke-RestMethod http://localhost:8000/incidents/detect | ConvertTo-Json -Depth 12

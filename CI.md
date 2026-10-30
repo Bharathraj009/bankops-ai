@@ -1,15 +1,13 @@
 # GitHub Actions and verification history
 
-Current public baseline: `8dff277`. [Application CI](https://github.com/Bharathraj009/bankops-ai/actions/runs/41002225074)
-passed; [hosted image scans](docs/verification/HOSTED_BASELINE.md) blocked five
-images on outstanding HIGH vulnerabilities, with zero CRITICAL. Strict gates
-include unfixed findings and remain unchanged. Banking and Jaeger passed.
-No registry publishing or deployment is enabled.
+Published baseline: `36a88e8`. [Application CI](https://github.com/Bharathraj009/bankops-ai/actions/runs/41060960966)
+passed all four jobs. [Hosted image verification](docs/verification/HOSTED_36A88E8.md)
+recorded five blocked gates, 44 unique HIGH package findings and zero CRITICAL;
+banking and Jaeger passed. Strict gates include unfixed findings. Workflows build,
+test and scan without deploying services or publishing container images.
 
-Investigation initiation is manual, cloud inference was tested only with mocks,
-and inference/remediation remain disabled by default. Operational financial
-evidence cannot be exported. This is not production banking software.
-See [publication status](PUBLICATION_READINESS.md).
+See [publication verification](PUBLICATION_READINESS.md) and the
+[deployment limitations](README.md#deployment-scope-and-limitations).
 
 The milestone sections below preserve dated evidence and intermediate behavior.
 Their test counts and runtime status apply to the stated milestone. Earlier

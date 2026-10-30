@@ -1,19 +1,20 @@
-# Human approval workflow foundation
+# Human approval workflow
 
 Real-process, HTTP and banking-data checks for Step 48 are recorded in
 [APPROVAL_VERIFICATION.md](APPROVAL_VERIFICATION.md).
 
 The agent now stores typed remediation proposals in its **own SQLite database**.
 Approval itself executes no remediation. The separately enabled, read-only
-execution foundation is documented in [REMEDIATION.md](REMEDIATION.md).
+execution engine is documented in [REMEDIATION.md](REMEDIATION.md).
 Banking accounts, transfers, ledger, migrations and
 monitoring are not accessed or changed by this workflow.
 
 The existing LangGraph ends after evidence assembly and RCA. It has no proposal
 or approval tools, and all existing investigation/API response contracts remain
 unchanged. A trusted proposer can separately submit an intention for human review.
-An approval is a recorded decision, not permission for any implemented executor:
-the later execution foundation accepts only two new read-only action types.
+Approval records a decision. Execution requires a separate reviewer request and
+accepts exactly two read-only action types; legacy restart/scale actions are
+non-executable.
 
 ## Configuration and role separation
 
@@ -43,7 +44,7 @@ request's claimed actor, status or AI output. Identical role digests are rejecte
 at configuration validation. Server-assigned audit principals are
 `proposal_service` and `human_reviewer`; personal information is not recorded.
 
-This foundation authenticates possession of a human-held credential, not physical
+The workflow authenticates possession of a human-held credential, not physical
 human presence. An operator must keep that credential out of automation. There
 is one logical reviewer principal; per-person identity, MFA, SSO, revocation
 history and multi-reviewer policies are not implemented. Restart with new digests
@@ -71,7 +72,7 @@ Create body:
 ```
 
 Action names are a fixed catalog: `restart_banking_service`,
-`scale_banking_service`, `investigate_dependency`, plus the Step 49 safe actions
+`scale_banking_service`, `investigate_dependency`, plus the read-only actions
 `CHECK_SERVICE_HEALTH` and `REFRESH_INCIDENT_EVIDENCE`. Approval never dispatches
 an operation; legacy actions remain non-executable. See [REMEDIATION.md](REMEDIATION.md)
 for explicit, separately gated execution of the two read-only actions.

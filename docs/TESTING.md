@@ -1,4 +1,4 @@
-# Testing the sanitized snapshot
+# Testing and integration verification
 
 Use Python 3.12, Node 22 and Java 21. Dependency lockfiles are authoritative.
 Never use a real banking database, cloud model key or paid provider for tests.
@@ -16,10 +16,10 @@ cd agent
 python -m pytest -q -W error -p no:cacheprovider
 ```
 
-The default suite uses synthetic evidence and mocked providers. The Step 74
-browser test is opt-in through BANKOPS_STEP74_BROWSER=1 and is skipped otherwise.
-It starts only loopback fixture servers. Step 75's Compose/browser harness is
-separate and uses real scheduler execution with cloud inference disabled.
+The default suite uses synthetic evidence and mocked providers. The standalone
+browser tests are opt-in through `BANKOPS_STEP74_BROWSER=1` and use loopback
+fixture servers. The separate scheduled Compose/browser harness runs an actual
+Airflow scheduler with cloud inference disabled.
 
 ## Frontend
 
@@ -43,7 +43,7 @@ runner-owned resources. See `.github/workflows/ci.yml` for the exact contract.
 The source scripts `local/run_step74_airflow.py` and `local/run_step75_backend.py`
 are historical local verification helpers, with platform/tool/image prerequisites.
 
-## Reproducing the Step 75 integration
+## Reproducing scheduled reconciliation integration
 
 `local/run_step75.py` requires the documented local fixture image set and existing
 Docker project generator, Chromium, Node, Python 3.12 and OpenSSL. It is a Windows
@@ -59,8 +59,8 @@ actual observed result and limitations, including partial idle banking metrics.
 
 The image workflow builds seven image targets, uploads SBOMs and scan artifacts,
 and fails on any HIGH/CRITICAL finding, including unfixed advisories. Gates are
-not suppressed or weakened to obtain green CI. [Hosted baseline scans](verification/HOSTED_BASELINE.md) are dated;
-a future push must run the current scanners again. No images are
+not suppressed or weakened to obtain green CI. [Published baseline scans](verification/HOSTED_36A88E8.md) are dated;
+subsequent pushes run the scanners again. No images are
 published and no deployment is performed by these workflows.
 
 Raw logs, local secrets, database files, screenshots containing banking records

@@ -20,8 +20,8 @@ npm run dev
 
 Open http://127.0.0.1:5173/banking. Vite proxies only /api/v1 to the configured
 backend. Set the target before starting/restarting Vite; it is server configuration,
-not a VITE_* browser variable. No database credentials or API keys belong in this
-frontend. Preview uses the same proxy setting on localhost:4173. Production static
+not a VITE_* browser variable. Keep database and upstream service credentials out of browser bundles and
+`VITE_*` variables. Preview uses the same proxy setting on localhost:4173. Production static
 hosting requires an appropriate same-origin /api/v1 reverse proxy and index.html
 history fallback; the Vite proxy is not part of the static build.
 
@@ -63,7 +63,7 @@ Account data and retry keys remain in memory, not localStorage, URLs or console
 logs. Only theme/sidebar preferences persist. **A forced reload or closed tab loses
 an unresolved retry key. Do not recreate an uncertain transfer; check backend
 records with an authorized operator first.** Cross-tab duplicate intent protection
-and durable transfer drafts require a future authenticated server workflow.
+and durable transfer drafts are outside the implemented browser-session workflow.
 
 The banking backend now authenticates operators and customers separately. Unlock
 `/banking` with the configured operator key; use `/customer` for customer login,
@@ -110,7 +110,7 @@ The API provides no global proposal list or personal actor identities. Proposals
 come from the existing trusted proposer integration; this UI does not create them.
 See [GOVERNANCE.md](GOVERNANCE.md) for contracts, credential handling, isolated
 SQLite/browser verification, actual results and limitations. Clear the credential
-and records when finished. Reconciliation now reads sanitized Airflow evidence; see RECONCILIATION.md.
+and records when finished. Reconciliation reads sanitized Airflow evidence; see [its guide](RECONCILIATION.md).
 
 ## Checks
 
@@ -131,7 +131,7 @@ API verification and its separately opt-in browser test.
 
 ## Reconciliation
 
-Step 62 connects `/reconciliation` to sanitized Airflow evidence through a GET-only
+`/reconciliation` consumes sanitized Airflow evidence through a GET-only
 agent proxy. It includes run/task states, check summaries, filters, details,
 refresh and freshness warnings. Set BANKOPS_RECONCILIATION_API_TARGET server-side
 before starting Vite if a separate agent is used. No DAG triggers or Airflow
@@ -142,13 +142,14 @@ are not available in the existing contract).
 Actual Airflow-to-agent-to-browser verification, the single authorized read-only
 run, natural stale expiry, and remaining limitations are documented in
 [LIVE_AIRFLOW_VERIFICATION.md](LIVE_AIRFLOW_VERIFICATION.md).
-# Unified local Docker (Step 67)
+## Unified local Docker
 
 See [the complete platform runbook](../local/README.md). The container builds the
 React assets and runs the existing local Vite preview/proxy as the non-root `node`
 user at http://127.0.0.1:15173. Its only writable application directory is Vite's
 temporary config directory. Banking requests preserve the caller's operator or
 customer credential; approved reliability routes use a separate server-side
-agent token. Customer APIs remain disabled in this stack. Authenticated banking
-and reliability proxy checks, cross-origin denial, 104 component tests, lint and
-TypeScript passed. This remains a local preview server, not a production gateway.
+agent token. Customer APIs remain disabled in this stack. The dated local integration verified
+authenticated proxy routes and cross-origin denial. Hosted application results
+for the published baseline are in [verification](../docs/verification/HOSTED_36A88E8.md);
+production gateway/identity requirements are listed in the [deployment scope](../README.md#deployment-scope-and-limitations).

@@ -1,6 +1,6 @@
 # Groq RCA integration
 
-Step 45 uses the existing `openai_compatible` provider with:
+The Groq profile uses the `openai_compatible` provider with:
 
 - Endpoint: `https://api.groq.com/openai/v1/chat/completions`
 - Model: `openai/gpt-oss-20b`

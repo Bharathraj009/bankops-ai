@@ -1,7 +1,7 @@
-﻿# Step 59: Live monitoring
+# Live monitoring
 
 The Monitoring workspace reuses the React design system, responsive panels, themes,
-accessible status messages and reduced-motion support. No dependencies were added.
+accessible status messages and reduced-motion support.
 Lightweight SVG charts have keyboard-focusable observation points, hover/focus
 value tooltips and an expandable table of the latest 20 observations.
 

@@ -1,7 +1,7 @@
-# Step 73B: document RAG and optional cloud analysis
+# Document retrieval and optional cloud analysis
 
-The real four-node LangGraph remains detection, evidence_collection,
-report_assembly and rca. Retrieval runs inside rca. Detection and source evidence
+The four-node LangGraph runs detection, evidence_collection, report_assembly
+and rca. Retrieval runs inside rca. Detection and source evidence
 remain authoritative; generated output cannot execute tools or banking writes.
 
 ## Local retrieval
@@ -27,7 +27,7 @@ With inference disabled, investigations still return deterministic retrieval in
 exposes document citations; the dashboard renders reviewed synthetic sources in
 an expandable citation viewer. Unreviewed local document titles/body remain hidden.
 
-Step 75 adds reconciliation evidence-gap, integrity and task-failure mappings.
+Reconciliation mappings cover evidence gaps, integrity violations and task failures.
 Only triggered, validated reconciliation rules enter this RAG-enabled grounding
 path. INSUFFICIENT_DATA never implies financial corruption. Real operational
 Airflow evidence remains local: external export policy is unchanged. For native

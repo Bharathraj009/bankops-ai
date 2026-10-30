@@ -1,7 +1,8 @@
-﻿# Step 61: Human approval and remediation dashboard
+# Human approval and read-only execution dashboard
 
-Implementation is confined to frontend/. No banking, agent API/store contracts,
-Airflow, monitoring services or Flyway V1-V5 were changed.
+The governance workspace connects proposal review, approved read-only execution
+and recorded-result verification through authenticated agent APIs. Each action
+requires the appropriate role credential and an explicit confirmation.
 
 ## Setup and actual API boundaries
 

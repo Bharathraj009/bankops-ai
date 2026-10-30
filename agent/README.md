@@ -1,43 +1,25 @@
 # BankOps AI reliability agent
 
-Independent FastAPI service for **Python 3.12**. `GET /health` returns HTTP 200:
+Python 3.12 FastAPI service for bounded evidence collection, deterministic incident
+detection, LangGraph investigation, local retrieval and validated hypothesis analysis.
+Evidence reports preserve source status, freshness and diagnostic-ID correlations.
 
-```json
-{"status":"ok","service":"bankops-reliability-agent"}
-```
+| Capability | Interface / implementation guide |
+| --- | --- |
+| Process health | `GET /health`; returns `{"status":"ok","service":"bankops-reliability-agent"}` |
+| Metrics, traces and logs | [Prometheus](PROMETHEUS_EVIDENCE.md), [Jaeger](TRACE_EVIDENCE.md), [JSONL](LOG_EVIDENCE.md) |
+| Deterministic incidents | `GET /incidents/detect`; [rules and thresholds](INCIDENT_DETECTION.md) |
+| Combined evidence | `GET /incidents/investigate`; [report contract](INVESTIGATION.md) |
+| Investigation graph | `POST /workflows/investigate`; [LangGraph](WORKFLOW.md) |
+| Local retrieval and optional analysis | [RAG](RAG.md), [RCA](RCA.md), [synthetic provider checks](LIVE_RCA_VERIFICATION.md) |
+| Reconciliation evidence | [Airflow integration](AIRFLOW_EVIDENCE.md) |
+| Human governance | [Approvals](APPROVALS.md), [read-only execution](REMEDIATION.md), [recorded-outcome verification](POST_REMEDIATION_VERIFICATION.md) |
 
-This is process health, with no external dependency probes. `GET /evidence/prometheus`
-explicitly collects read-only aggregate evidence; see [PROMETHEUS_EVIDENCE.md](PROMETHEUS_EVIDENCE.md).
-`GET /incidents/detect` applies deterministic rules to a fresh evidence snapshot;
-see [INCIDENT_DETECTION.md](INCIDENT_DETECTION.md) for thresholds and state semantics.
-`GET /evidence/traces` collects recent, sanitized banking trace evidence from
-Jaeger; see [TRACE_EVIDENCE.md](TRACE_EVIDENCE.md) for limits and privacy rules.
-`GET /evidence/logs` reads bounded, allowlisted WARN/ERROR evidence from an
-explicitly configured local JSONL file; see [LOG_EVIDENCE.md](LOG_EVIDENCE.md).
-`GET /incidents/investigate` combines detection and supporting evidence in one
-read-only report; see [INVESTIGATION.md](INVESTIGATION.md) for its response contract.
-`POST /workflows/investigate` runs the same investigation through a deterministic
-LangGraph workflow with optional, validated LLM hypothesis analysis; see
-[WORKFLOW.md](WORKFLOW.md) and [RCA.md](RCA.md). Inference is disabled by default.
-RCA supports a JSON gateway or an OpenAI-compatible chat-completion endpoint;
-endpoint, model and credentials are supplied through environment variables.
-The disabled Groq profile and exactly two opt-in synthetic scenarios are described
-in [GROQ.md](GROQ.md).
-Human-held reviewer approval and persistent proposal records are described in
-[APPROVALS.md](APPROVALS.md). Approval never executes remediation.
-Actual isolated HTTP/process-restart verification is documented in
-[APPROVAL_VERIFICATION.md](APPROVAL_VERIFICATION.md).
-The disabled-by-default, approved read-only execution framework is documented in
-[REMEDIATION.md](REMEDIATION.md).
-Actual read-only action, failure and restart results are recorded in
-[REMEDIATION_VERIFICATION.md](REMEDIATION_VERIFICATION.md).
-Run synthetic or opt-in live checks using
-[LIVE_RCA_VERIFICATION.md](LIVE_RCA_VERIFICATION.md).
-Local Ollama readiness and disabled environment preparation are documented in
-[OLLAMA_SETUP.md](OLLAMA_SETUP.md); no model is downloaded automatically.
-API docs and OpenAPI
-routes are disabled. There are no banking API/database clients,
-background jobs or infrastructure-changing remediation actions.
+Inference and execution are configured separately and disabled by default. Cloud
+inference verification uses mocked transports; outbound requests require the
+synthetic-data profile and explicit opt-in. The agent operates through bounded
+observability APIs and a trusted local log source, with no banking API/database
+client or background investigation watcher. See [deployment scope](../README.md#deployment-scope-and-limitations).
 
 ## Run locally
 
@@ -76,7 +58,7 @@ also adds correlation IDs to framework-generated error responses.
 Invalid settings fail startup. Values come from the process environment; `.env`
 is deliberately not loaded automatically, and banking credentials/settings are
 not read. `.env.example` documents the agent namespace. Environment selection
-does not activate future capabilities.
+controls validation/security settings; capabilities have separate opt-in settings.
 
 ## JSON logging
 
@@ -100,15 +82,15 @@ Get-Content agent.log | ForEach-Object { $_ | ConvertFrom-Json } |
 
 ## Modules
 
-- `api/`: health and read-only evidence HTTP contracts.
-- `config.py`, `logging.py`, `middleware.py`: settings and request observability.
-- `detection/`: deterministic incident detection rules.
-- `evidence/`: privacy-bounded Prometheus and Jaeger evidence collection.
-- `rca/`: future root cause analysis boundary.
-- `remediation/`: future remediation boundary.
-
-The RCA and remediation packages contain documentation only, with no operational
-behavior or invented interfaces to commit future implementations to.
+- `api/`: health, evidence, investigation and governance HTTP contracts.
+- `config.py`, `logging.py`, `middleware.py`, `security.py`: settings,
+  request observability and deployment authentication.
+- `detection/`: deterministic metrics and Airflow incident rules.
+- `evidence/`: bounded Prometheus, Jaeger, JSONL and Airflow collectors.
+- `investigation.py`, `workflow.py`: shared report assembly and the four-node graph.
+- `rag/`: document ingestion, chunking, BM25 retrieval and export controls.
+- `rca/`: provider adapters, evidence catalogs and validated hypothesis analysis.
+- `remediation/`: proposal/approval storage, read-only execution and recorded-result verification.
 
 ## Dependencies and tests
 
@@ -125,10 +107,12 @@ Regenerate with Python 3.12 and pip-tools:
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-Tests cover health, validated/namespaced settings,
-correlation IDs, JSON field safety, error responses, concurrency, and failed log
-handlers, plus mocked Prometheus responses and real HTTP against a local fake
-Prometheus server. No database or running BankOps services are required.
+Tests cover collectors, detection, graph execution, retrieval, citation validation,
+mocked providers, authentication, approval/execution stores, correlation logging
+and failure behavior. Fixtures use synthetic HTTP responses, temporary JSONL and
+isolated SQLite; default tests require no running BankOps services or banking DB.
+The [testing guide](../docs/TESTING.md) describes separate opt-in browser and
+scheduler integration checks.
 
 ## Docker
 

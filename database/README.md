@@ -1,4 +1,4 @@
-# Database security — Step 65
+# Database identities and least privilege
 
 ## Unified local Docker integration (Step 67)
 

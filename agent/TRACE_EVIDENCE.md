@@ -3,8 +3,8 @@
 `GET /evidence/traces` performs one read-only search of recent `banking-service`
 traces using Jaeger v3's `GET /api/v3/traces`. There is no polling or background
 collection. `/health` does not contact Jaeger, and the existing Prometheus and
-incident endpoints retain their behavior. No banking API/database calls, LLMs,
-LangGraph, RCA or remediation are added.
+incident endpoints retain their behavior. The trace endpoint returns source evidence; [the investigation graph](WORKFLOW.md)
+combines it with other sources and optional analysis.
 
 ```powershell
 Invoke-RestMethod http://localhost:8000/evidence/traces | ConvertTo-Json -Depth 12
@@ -24,9 +24,8 @@ All names have prefix **`BANKOPS_AGENT_`**:
 | `JAEGER_MAX_TOTAL_SPANS` | 500 | 1–2,000 across all returned traces |
 | `JAEGER_SLOW_SPAN_SECONDS` | 1 | Positive finite, maximum 3,600 seconds |
 
-The URL can include a proxy base path. A future agent container sharing Jaeger's
-Compose network should use `http://jaeger:16686`. This step does not add it to
-Compose or change monitoring services. No caller-supplied service names, trace
+The URL can include a proxy base path. The unified stack uses
+`http://jaeger:16686` on the internal Compose network. No caller-supplied service names, trace
 IDs, attributes, search expressions or limit overrides are accepted by the API.
 
 The fixed search supplies `query.service_name=banking-service`, RFC3339 start/end

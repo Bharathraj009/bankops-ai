@@ -1,13 +1,12 @@
 # Unified incident investigation
 
-`GET /incidents/investigate` performs one read-only investigation on demand.
-It reuses the existing Prometheus detection snapshot (seven aggregate queries),
-Jaeger collector, local JSONL collector and deterministic detection rules.
-Collectors run concurrently, once per request. There is no persistence,
-background investigation, LLM, remediation or banking API/database
-access. Query parameters receive HTTP 400; other methods receive HTTP 405.
-The separate [workflow endpoint](WORKFLOW.md) now uses LangGraph to execute the
-same shared collection and report functions; this GET endpoint remains unchanged.
+`GET /incidents/investigate` assembles an on-demand evidence report from the
+seven-query Prometheus detection snapshot, optional Airflow summaries, Jaeger
+traces and a trusted local JSONL source. Metrics/detection and supporting-source
+collection run concurrently. The GET endpoint returns evidence and correlations;
+the separate [workflow POST](WORKFLOW.md) adds LangGraph orchestration, local
+retrieval and optional validated analysis. Query parameters receive HTTP 400;
+unsupported methods receive HTTP 405.
 
 ## Response contract
 
@@ -16,6 +15,7 @@ HTTP 200 returns structured evidence even when dependencies are unavailable:
 | Field | Meaning |
 | --- | --- |
 | `started_at`, `completed_at` | UTC investigation timestamps |
+| `evidence_mode` | Operational evidence or the separate synthetic-demo profile |
 | `evidence_status` | `complete`, `partial`, or `unavailable`; independent of incident status |
 | `detection.state` | Existing `healthy`, `incident`, or `insufficient_data` decision |
 | `detection.detected_at` | Rule evaluation timestamp, immediately after metrics collection |

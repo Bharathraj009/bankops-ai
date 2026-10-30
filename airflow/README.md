@@ -1,8 +1,14 @@
-﻿# Banking reconciliation foundation — Step 53
+# Banking reconciliation and Airflow scheduling
 
-A standalone Python module under airflow/. No Airflow project previously existed;
-no Airflow dependency, DAG or scheduling is introduced. Banking code, migrations,
-monitoring and the agent are unchanged.
+The reconciliation module checks account balances, double-entry postings, ledger
+consistency and transfer lifecycle invariants in one read-only PostgreSQL snapshot.
+A daily Airflow DAG runs the connectivity, reconciliation and validation tasks;
+the agent and dashboard consume bounded task/check summaries.
+
+Use the [local platform](../local/README.md) for the integrated scheduler runtime
+and [Airflow runtime guide](LOCAL_RUNTIME.md) for component setup. The CLI below
+runs reconciliation independently. [Scheduled integration evidence](../docs/verification/STEP75_INTEGRATION_REPORT.md)
+records an actual scheduler-created run reaching the dashboard.
 
 ## Configuration and execution
 
@@ -70,8 +76,8 @@ schema, source/query failures or timeout returns INSUFFICIENT_DATA, with no part
 findings. A compatible empty snapshot passes vacuously. A complete snapshot with
 any violation is FAIL; otherwise PASS. No unavailable or incomplete scan is healthy.
 
-This in-memory foundation is not intended for unbounded bank-scale datasets.
-Future streaming/SQL aggregation must preserve snapshot and completeness semantics.
+The implementation reads bounded snapshots in memory. Larger datasets would need
+streaming or SQL aggregation while preserving snapshot and completeness semantics.
 PASS only describes these current-snapshot invariants; it is not proof of external
 settlement, historical lifecycle correctness, fraud absence or source authenticity.
 
@@ -96,6 +102,8 @@ failures, safe unavailable responses and snapshots during concurrent commits.
 Actual suite results follow below.
 
 ## Actual verification results
+
+Historical standalone-module verification (Step 53), before DAG scheduling was added:
 
 - Reconciliation suite: **20 passed**, warnings treated as errors, 12.42 seconds.
 - Banking suite: **202 passed**, zero failures/errors/skips, BUILD SUCCESS,

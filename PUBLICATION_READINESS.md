@@ -1,19 +1,24 @@
 # Publication status and verification
 
-Reviewed 2026-10-30 (America/Chicago). The implementation is already public on
-`main` at `8dff2773c26471544afc25685294df53d4a4dc75`. It is not awaiting its first
-commit or push. Application CI passed; five image gates remain blocked by HIGH
-vulnerabilities, with zero CRITICAL. See [exact hosted results](docs/verification/HOSTED_BASELINE.md).
-Strict HIGH/CRITICAL gates remain unchanged, including unfixed findings.
+Published baseline:
+[`36a88e892c10a7ffba6660a9096b42d5a65f812b`](https://github.com/Bharathraj009/bankops-ai/commit/36a88e892c10a7ffba6660a9096b42d5a65f812b),
+branch `main`. The documentation quality-audit follow-up was committed and pushed
+after implementation commit `8dff277`.
+
+[Application CI](https://github.com/Bharathraj009/bankops-ai/actions/runs/41060960966)
+passed all four jobs. [Image security](https://github.com/Bharathraj009/bankops-ai/actions/runs/41060960956)
+analyzed all seven targets and generated their SBOMs; five strict gates blocked on
+HIGH findings. The scans contain 44 unique HIGH package findings across eight CVEs
+and zero CRITICAL. Banking and Jaeger passed. See [per-image verification](docs/verification/HOSTED_36A88E8.md).
 
 The [2026-10-29 preparation record](docs/verification/PUBLICATION_READINESS_2026-10-29.md)
-preserves local test results and the original pending-approval state. Those tests
-are not claimed as fresh executions in this review. The [testing guide](docs/TESTING.md)
-distinguishes synthetic UI checks from scheduler integration and lists prerequisites.
+and [first quality audit](docs/verification/QUALITY_AUDIT_2026-10-30.md) preserve the
+state at their respective local reviews, before those changes were published.
+Their pending-commit/approval wording is historical. The original
+[implementation scan record](docs/verification/HOSTED_BASELINE.md) remains available.
 
-The current follow-up documentation review is local and has not been committed or
-pushed. No deployment, container publishing or history rewrite is part of it.
-
-Remaining limits include manual investigation, mocked cloud inference, synthetic
-data, unresolved image vulnerabilities, local preview serving and non-production
-security/deployment plumbing. See [security](SECURITY.md) and [scope](PUBLICATION.md).
+The [testing guide](docs/TESTING.md) documents tool and database prerequisites,
+synthetic browser fixtures and the separate scheduler integration. The
+[deployment limitations](README.md#deployment-scope-and-limitations) and
+[security controls](SECURITY.md) describe the remaining engineering work and risks.
+Hosted results apply to their source commit; later changes require new checks.

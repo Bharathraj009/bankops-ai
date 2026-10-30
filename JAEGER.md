@@ -28,7 +28,7 @@ database credential setup in [PROMETHEUS.md](PROMETHEUS.md). Reserve bootstrap
 does not need to run for tracing. The `monitoring` profile enables
 `bankops.tracing.otlp.enabled=true`; other profiles leave export disabled unless
 explicitly enabled. `BANKOPS_OTLP_TRACES_ENDPOINT` can override the full OTLP HTTP
-trace endpoint (include `/v1/traces`). For a future container-run banking service,
+trace endpoint (include `/v1/traces`). For a banking service running in the same Compose network,
 use the Compose address `http://jaeger:4318/v1/traces` instead of host localhost.
 
 The OpenTelemetry exporter version is managed by Spring Boot's existing BOM.

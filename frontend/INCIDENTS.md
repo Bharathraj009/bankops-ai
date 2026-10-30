@@ -1,7 +1,7 @@
-﻿# Step 60: Incident detection and AI investigation
+# Incident detection and AI investigation
 
-All implementation and fixture changes are under frontend/. Existing agent,
-banking, Airflow, monitoring configuration and V1-V5 contracts are unchanged.
+The incidents and investigation workspaces display deterministic detection,
+source status, correlated evidence and optional validated hypotheses from the agent.
 
 ## Start
 

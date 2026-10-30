@@ -1,4 +1,4 @@
-# Customer Banking — Step 64
+# Customer Banking
 
 The `/customer` workspace uses separate Spring Security customer authentication.
 `/banking` remains the operator workspace, requiring explicit operator unlock.

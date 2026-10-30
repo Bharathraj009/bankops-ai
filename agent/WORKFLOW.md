@@ -34,11 +34,13 @@ join. See the [official graph API](https://docs.langchain.com/oss/python/langgra
 - `detection`: fetch the seven existing aggregate Prometheus observations and
   immediately evaluate the deterministic rules, preserving freshness checks.
 - `evidence_collection`: concurrently fetch sanitized Jaeger traces and local
-  WARN/ERROR log evidence with the existing independent source fallbacks.
+  log evidence with independent source fallbacks (WARN/ERROR by default;
+  native INFO context is an explicit opt-in).
 - `report_assembly`: after both branches finish, assemble the same report,
   counts, exact-ID groups and empty possible-explanations list as the GET path.
-- `rca`: analyze a bounded, sanitized evidence catalog through the configured
-  provider, strictly validate referenced hypotheses, or return undetermined.
+- `rca`: build a bounded evidence catalog, retrieve local runbook chunks when
+  RAG is enabled, then run configured analysis and validate citations. Retrieval
+  remains available with inference disabled; the RCA status is then undetermined.
 
 `InvestigationState` is a `TypedDict` containing `started_at`, then optional
 `decision`, `traces`, `logs`, `report` and `rca` fields populated by the nodes. Branches

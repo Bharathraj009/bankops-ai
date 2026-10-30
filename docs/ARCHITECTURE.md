@@ -5,7 +5,7 @@ methods and origins and supplies the server-held agent credential only to approv
 agent routes. Financial operations remain in the banking API and PostgreSQL.
 The agent has no financial database credentials or financial network membership.
 
-## Real investigation graph
+## Investigation graph
 
 ```mermaid
 flowchart TD
@@ -46,17 +46,18 @@ sequenceDiagram
   Agent-->>UI: Deterministic report and local source references
 ```
 
-The scheduled integration fixture temporarily restricted the reader's
-schema-history
-SELECT permission. Connectivity succeeded; reconciliation returned unavailable
+The scheduled integration fixture temporarily restricted the reader's SELECT
+permission on schema-history metadata. Connectivity succeeded; reconciliation returned unavailable
 evidence; validators failed intentionally. No banking records were changed.
 The scheduled run, not a fabricated API response, reached Chromium. Initiation
 of investigation remained manual and pull-based. See the [dated integration report](verification/STEP75_INTEGRATION_REPORT.md).
 
 ## Optional model path
 
-Cloud inference is disabled by default. The supported adapter was exercised with
-mocked transports; real inference is not claimed. External requests require a
+RCA implements provider adapters, evidence catalogs and local output validation.
+RAG runs inside the analysis node and returns citations even with inference
+disabled. Cloud inference was verified with mocked transports; successful live
+cloud inference remains unverified. External requests require a
 separate synthetic-demo profile, explicit opt-in and canonical reviewed context.
 Operational Airflow/banking evidence is blocked from export. Invalid, missing or
 unsupported citations are rejected locally, independently of provider schemas.

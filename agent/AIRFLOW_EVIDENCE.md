@@ -1,4 +1,4 @@
-﻿# Airflow reconciliation incident evidence (Step 56)
+# Airflow reconciliation incident evidence
 
 The reliability agent optionally collects reconciliation status from authenticated
 Airflow 3.3 REST API v2 GET endpoints. It reuses the existing incident detection

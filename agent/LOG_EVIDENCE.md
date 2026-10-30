@@ -16,6 +16,7 @@ Set these environment variables before starting the agent:
 | `LOG_WINDOW_SECONDS` | 300 | 1–3600 seconds |
 | `LOG_MAX_EVENTS` | 100 | 1–500 events |
 | `LOG_MAX_BYTES` | 1048576 | 1024–4194304 bytes per collection |
+| `LOG_INCLUDE_INFO` | false | Include bounded native INFO events as context |
 
 For example, supply `BANKOPS_AGENT_LOG_SOURCE_DIRECTORY=C:\bankops-logs` and
 place `banking.jsonl` in that directory. The agent does not create the directory
@@ -31,7 +32,7 @@ The response contains source, fixed service name, collection timestamp, window
 start/end, status, truncation flag, and newest-first events. Events contain only:
 
 - `timestamp` from ECS `@timestamp`, with a timezone, within the current window;
-- `level`, exactly `WARN` or `ERROR`;
+- `level`, `WARN`/`ERROR`, plus `INFO` when explicitly enabled;
 - `event_type`, exactly `http_request_completed` or `transfer_outcome`;
 - `correlation_id`, only a UUID-shaped value, otherwise null;
 - `trace_id`, only a nonzero lowercase 32-digit hex value, otherwise null.
@@ -45,10 +46,11 @@ identifiers, not authentication or proof of a financial event. Only consume
 trusted banking logs: a reader cannot determine whether someone deliberately
 encoded sensitive information into a syntactically valid diagnostic ID.
 
-Current banking safe events are emitted at **INFO**, including unsuccessful
-HTTP outcomes. They are intentionally excluded. An empty response is expected
-unless the configured file contains approved WARN/ERROR events. This collector
-does not reclassify severity or change banking logging configuration.
+Native banking safe events use **INFO**, including unsuccessful HTTP outcomes.
+The default collector excludes them; set `BANKOPS_AGENT_LOG_INCLUDE_INFO=true`
+to include their bounded context. INFO events retain their severity and do not
+become warning hypotheses or causal evidence. An empty response is expected when
+the file has no qualifying events under the selected level/window settings.
 
 ## Failure behavior and limitations
 

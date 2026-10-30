@@ -1,9 +1,10 @@
 # Optional LLM root cause analysis
 
-Step 73B adds [document retrieval and synthetic-only cloud controls](RAG.md).
-Those controls supersede the older live-provider examples below: real outbound
-requests now require RAG, synthetic demo evidence and explicit external opt-in.
-Operational banking/observability evidence cannot be sent to any provider.
+The implemented analyzer combines a bounded evidence catalog with
+[local retrieval and synthetic-data export controls](RAG.md). Real outbound
+requests require RAG, synthetic demo evidence and explicit external opt-in.
+The provider examples below describe adapter configuration; use the linked
+RAG settings as well. Operational banking/observability evidence stays local.
 
 For synthetic and opt-in live workflow checks, see
 [LIVE_RCA_VERIFICATION.md](LIVE_RCA_VERIFICATION.md).
@@ -26,8 +27,8 @@ All variables use the `BANKOPS_AGENT_` prefix. Defaults disable external inferen
 | Suffix | Default | Meaning / bounds |
 | --- | --- | --- |
 | `LLM_PROVIDER` | `disabled` | `disabled`, `json_http`, `openai_compatible` or `openai_cloud`; see RAG.md for export policy |
-| `LLM_URL` | unset | Full inference endpoint; required for either enabled provider |
-| `LLM_API_KEY` | unset | Required nonempty bearer key for `openai_compatible`; optional for `json_http`; never logged or included in evidence |
+| `LLM_URL` | unset | Full endpoint for `json_http`/`openai_compatible`; `openai_cloud` uses the fixed endpoint in RAG.md |
+| `LLM_API_KEY` | unset | Required bearer key for `openai_compatible`/`openai_cloud`; optional for `json_http`; excluded from logs/evidence |
 | `LLM_MODEL` | `rca` | Gateway model identifier, 1–100 restricted characters |
 | `LLM_TIMEOUT_SECONDS` | 5 | Total analysis deadline, greater than 0 and at most 30 |
 | `LLM_MAX_INPUT_BYTES` | 32768 | Full serialized inference request budget, 1024–65536 |
