@@ -1,16 +1,30 @@
-# BankOps AI
+# Reconlith
 
-**Banking integrity, observability and evidence-grounded incident investigation.**
+**Financial Systems Reliability & Incident Intelligence**
 
-BankOps AI combines a transactional Java banking service, PostgreSQL ledger,
+A failed reconciliation job can mean missing evidence rather than broken financial
+records. Operators need to see what failed, inspect supporting observations, and
+keep any follow-up action under human control. Reconlith is a portfolio project
+that demonstrates this separation using synthetic banking data.
+
+Reconlith combines a transactional Java banking service, PostgreSQL ledger,
 read-only Airflow reconciliation, a Python reliability agent and a React operations
 workspace. It connects service symptoms to bounded metrics, traces, logs and
 reconciliation evidence while keeping financial writes and human authorization
 in separate components.
 
-![BankOps AI operations workspace](docs/images/workspace-overview.png)
+![Operations workspace under the original BankOps AI branding](docs/images/workspace-overview.png)
 
 *Static interface preview from a browser test using no service requests or customer data.*
+
+Originally developed under the working name BankOps AI. Technical identifiers,
+existing screenshots and the GitHub repository URL retain that name for traceability.
+
+## Start here
+
+- [Architecture and boundaries](docs/ARCHITECTURE.md) and [engineering decisions](docs/ENGINEERING_DECISIONS.md)
+- [Verification evidence](docs/VERIFICATION_EVIDENCE.md), [tests](docs/TESTING.md) and [CI](CI.md)
+- [Security disclosures](SECURITY.md) and [dated development notes](docs/DEVELOPMENT_NOTES.md)
 
 ## Implemented capabilities
 
@@ -75,16 +89,56 @@ browser cases skipped), **62 focused frontend tests** and **7 focused Java tests
 subsequently passed all four application jobs. These records distinguish component
 regressions, synthetic browser fixtures and scheduler integration.
 
+## Implementation and verification scope
+
+| Status | What it means here |
+| --- | --- |
+| Implemented | Transactional banking, read-only reconciliation, four-node investigation, local retrieval/citation validation and separately gated human approvals exist in source. |
+| Tested in fixtures | Scheduled reconciliation-to-UI integration used a disposable synthetic environment; ordinary browser tests use fixtures and provider tests mock inference. |
+| Normal local stack | The quick start runs without cloud inference; the complete scheduled-evidence/log path needs the additional configuration documented below. |
+| Planned or unverified | The demo video, production deployment and successful live cloud inference are not established by the published evidence. |
+
+The actual Step 75 RCA outcome was **Undetermined**, with inference disabled and
+**no hypotheses**. Local retrieval found relevant documentation; that does not
+establish a cause. See the [evidence guide](docs/VERIFICATION_EVIDENCE.md) for scope.
+
+## Planned 90-second hybrid demo
+
+No demo video has been recorded or published yet. The planned sequence is:
+
+- **0-20s:** introduce Reconlith, the banking integrity problem and architecture.
+- **20-55s:** newly recorded real local UI footage showing an explicit investigation,
+  monitoring/traces, the LangGraph workflow result, retrieved runbooks and source
+  citations; label the configuration and data scope.
+- **55-75s:** separately labeled historical synthetic test evidence from Step 75,
+  showing Airflow reconciliation, the scheduled evidence gap, partial metrics and
+  Undetermined RCA.
+- **75-90s:** explain human approval boundaries, test navigation and limitations.
+
+Any illustrative animation will be labeled as an explanation of architecture or
+workflow, separately from real application footage and historical test evidence.
+Historical evidence will be identified by its date and fixture scope. New footage
+must show its actual observed result; it will not be presented as a replay of the
+historical integration or as successful live inference.
+
+## Engineering challenges
+
+The central challenges are preserving ledger invariants under concurrent retries,
+separating missing evidence from financial violations, and keeping model output
+inside validated citation and human-review boundaries. The
+[engineering decisions](docs/ENGINEERING_DECISIONS.md) explain the implementation,
+tradeoffs and tests for each boundary.
+
 ## Technology stack
 
-| Area | Technologies |
+| Area | Technologies and purpose |
 | --- | --- |
-| Banking | Java 21, Spring Boot, PostgreSQL, Flyway |
-| Reliability | Python 3.12, FastAPI, LangGraph, Pydantic, httpx2 |
-| Retrieval | Local BM25, JSON documents, content-addressed references |
-| Workflows | Apache Airflow, read-only aggregate reconciliation |
-| Dashboard | React, TypeScript, Vite, Playwright/Chromium |
-| Observability | Prometheus, Grafana, OpenTelemetry, Jaeger |
+| Banking | Java 21 / Spring Boot: authenticated transactional API; PostgreSQL / Flyway: ledger constraints and versioned schema |
+| Reliability | Python 3.12 / FastAPI: evidence API; LangGraph: explicit investigation stages; Pydantic / httpx2: validated, bounded collection |
+| Retrieval | Local BM25 over reviewed JSON runbooks with content-addressed references for traceable guidance |
+| Workflows | Apache Airflow schedules read-only aggregate reconciliation and records task outcomes |
+| Dashboard | React / TypeScript: operations workspace; Vite: local server/proxy; Playwright/Chromium: browser verification |
+| Observability | Prometheus: aggregate metrics; Grafana: dashboards; OpenTelemetry / Jaeger: request traces |
 | Delivery checks | Docker Compose, GitHub Actions, Trivy, SBOM artifacts |
 
 Dependency versions are pinned in the repository lockfiles and Dockerfiles.
