@@ -54,7 +54,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
       </span>
       {!compact && (
         <span className="brand-type">
-          BankOps <span>AI</span>
+          Recon<span>lith</span>
         </span>
       )}
     </span>

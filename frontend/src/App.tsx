@@ -75,7 +75,7 @@ export default function App() {
     savePreference('bankops-sidebar', collapsed ? 'collapsed' : 'expanded')
   }, [collapsed])
   useEffect(() => {
-    document.title = `${page?.label ?? 'Page not found'} · BankOps AI`
+    document.title = `${page?.label ?? 'Page not found'} · Reconlith`
     if (previousPath.current !== location.pathname) {
       heading.current?.focus()
       previousPath.current = location.pathname
@@ -246,7 +246,7 @@ export default function App() {
         </main>
         <footer className="workspace-footer">
           <span>
-            <strong>BankOps AI</strong>{' '}
+            <strong>Reconlith</strong>{' '}
             <span className="footer-separator">/</span> Built for considered
             operations
           </span>
@@ -320,8 +320,7 @@ export default function App() {
       >
         <Badge tone="blue">Frontend foundation</Badge>
         <p className="guide-lead">
-          BankOps AI brings banking operations and reliability into one
-          considered workspace.
+          Reconlith — Financial Systems Reliability &amp; Incident Intelligence.
         </p>
         <p>
           Banking connects to the configured API for account creation, account

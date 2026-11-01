@@ -13,9 +13,11 @@ workspace. It connects service symptoms to bounded metrics, traces, logs and
 reconciliation evidence while keeping financial writes and human authorization
 in separate components.
 
-![Operations workspace under the original BankOps AI branding](docs/images/workspace-overview.png)
+![Reconlith operations overview captured from the actual React interface](docs/images/reconlith-overview-desktop.png)
 
-*Static interface preview from a browser test using no service requests or customer data.*
+*Actual React interface, captured locally at 1600 x 900 on 2026-11-01.
+Frontend-only overview: no service requests, customer data, live metrics or RCA results.
+[Capture origins and historical preview](docs/images/README.md).*
 
 Originally developed under the working name BankOps AI. Technical identifiers,
 existing screenshots and the GitHub repository URL retain that name for traceability.
@@ -45,25 +47,24 @@ existing screenshots and the GitHub repository URL retain that name for traceabi
 
 ```mermaid
 flowchart TB
-  User[Operator: explicit investigation] --> UI[React + TypeScript]
-  UI --> Proxy[Same-origin route and authorization boundary]
-  Proxy --> Agent[FastAPI reliability agent]
-  Proxy --> Banking[Spring Boot banking API]
-  Banking --> DB[(PostgreSQL ledger)]
-  Banking --> Metrics[Prometheus / Grafana]
-  Banking --> Traces[OpenTelemetry / Jaeger]
-  Banking --> Logs[Sanitized native JSONL]
-  Airflow[Airflow scheduler and reconciliation] -->|SELECT only| DB
-  Agent -->|Viewer GETs| Airflow
-  Agent --> Metrics
-  Agent --> Traces
-  Agent -->|Read only| Logs
-  Agent --> Graph[Four-node LangGraph]
-  Graph --> RAG[Local BM25 and synthetic runbooks]
-  RAG --> Report[Evidence report returned to UI with source references]
-  Reviewer[Separate human reviewer] --> Approvals[Approval and audit boundary]
-  Approvals --> Agent
+  UI["React dashboard<br/>Operator / reviewer requests"] --> Proxy["Same-origin proxy"]
+  Proxy --> Banking["Java 21 / Spring Boot<br/>Transactions to<br/>PostgreSQL ledger"]
+  Proxy --> Agent["Python FastAPI<br/>Four-node LangGraph<br/>Local BM25 RAG<br/>Separate approval controls"]
+  Agent -->|Read-only collectors| Evidence["Prometheus metrics<br/>Jaeger traces / safe logs<br/>Airflow reconciliation API"]
+  Evidence -->|Prometheus datasource| Grafana["Grafana dashboards"]
 ```
+
+This compact overview groups components to remain readable on narrow screens.
+Arrows show request, collection and datasource relationships, not an always-on
+incident pipeline.
+Airflow separately schedules SELECT-only reconciliation against the PostgreSQL
+ledger; its viewer API supplies bounded summaries to the agent. Investigations require an explicit request; Airflow access and native log
+ingestion need additional configuration. The approval API is separate from the
+LangGraph: approval alone executes nothing, and read-only execution is separately
+gated and disabled by default, with only two supported read-only actions. The agent
+does not write banking data. The telemetry box groups separate sources: Prometheus
+scrapes banking metrics, Jaeger receives OpenTelemetry traces, and the agent reads
+sanitized local logs. Grafana queries Prometheus, not the agent or banking ledger.
 
 Financial writes pass through Spring Boot and PostgreSQL integrity controls.
 The agent collects operational evidence through bounded read interfaces, without

@@ -50,7 +50,7 @@ export default function Overview({ openGuide }: { openGuide: () => void }) {
           <div className="architecture-line line-two" />
           <div className="architecture-center">
             <Layers3 size={29} strokeWidth={1.3} />
-            <span>BankOps AI</span>
+            <span>Reconlith</span>
           </div>
           <div className="architecture-node node-banking">
             <CircleDot size={15} />
@@ -148,7 +148,7 @@ export default function Overview({ openGuide }: { openGuide: () => void }) {
           className="principles-panel"
           aria-labelledby="principles-heading"
         >
-          <span className="card-overline">THE BANKOPS APPROACH</span>
+          <span className="card-overline">THE RECONLITH APPROACH</span>
           <h2 id="principles-heading">
             Confidence starts
             <br /> with context.

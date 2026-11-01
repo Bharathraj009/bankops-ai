@@ -17,7 +17,7 @@ function mount(path = '/') {
   )
 }
 
-describe('BankOps workspace', () => {
+describe('Reconlith workspace', () => {
   it('provides all eight accessible routes without inventing live information', () => {
     const fetch = vi.fn()
     vi.stubGlobal('fetch', fetch)
@@ -53,7 +53,7 @@ describe('BankOps workspace', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Banking' }),
     ).toHaveFocus()
-    expect(document.title).toBe('Banking · BankOps AI')
+    expect(document.title).toBe('Banking · Reconlith')
   })
   it('loads the reconciliation deep link without fabricating evidence', async () => {
     vi.stubGlobal(

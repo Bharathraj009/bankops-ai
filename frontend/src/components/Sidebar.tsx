@@ -20,7 +20,7 @@ export function Sidebar({
     <div className={`sidebar-content ${collapsed ? 'is-collapsed' : ''}`}>
       <Link
         to="/"
-        aria-label="BankOps AI home"
+        aria-label="Reconlith home"
         className="brand-link"
         onClick={onNavigate}
       >
